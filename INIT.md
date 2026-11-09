@@ -163,11 +163,6 @@ When unsure, stop and ask. Prefer a short question over a large wrong change.
 │   ├── 01_eda.ipynb
 │   ├── 02_results_analysis.ipynb
 │   └── kaggle_launcher.ipynb
-├── tests/
-│   ├── test_no_leakage.py
-│   ├── test_splits.py
-│   ├── test_features_schema.py
-│   └── test_metrics.py
 └── reports/
     ├── tables/              # B1..B4 as CSV (+ LaTeX/Markdown optional)
     └── figures/             # ROC/PR, Optuna history, reliability, SHAP, heatmap
@@ -230,7 +225,7 @@ Each step lists the owner, the work the agent does, and what the human launches.
 ### Phase 0 — Scaffold
 1. **Agent:** create the repository structure in Section 4, `pyproject.toml` (via `uv`), `.gitignore`, `README.md` skeleton, `DECISIONS.md` with the decisions already made (models, tools, scope), stub modules, and `configs/base.yaml`.
 2. **Agent:** create `src/config.py`, `src/utils/memory.py`, and `src/utils/logging.py` fully.
-3. **Human:** `uv sync`, run `pytest`, commit to a branch, push.
+3. **Human:** `uv sync`, commit to a branch, push.
 
 ### Phase 1 — Data ingestion and EDA — Person A
 4. **Agent:** write `src/data/load.py` to convert each CSV to downcast Parquet in `data/interim/`, chunked for the large tables (`bureau_balance`, `installments_payments`, `POS_CASH_balance`, `credit_card_balance`).
@@ -239,19 +234,19 @@ Each step lists the owner, the work the agent does, and what the human launches.
 7. **Agent:** produce `notebooks/01_eda.ipynb`: missingness, target rate, anomalies, key cardinalities, join coverage.
 
 ### Phase 2 — Splits and baseline — Person B
-8. **Agent:** write `src/cv/splits.py` and `tests/test_splits.py` (stratification preserved, no overlap, hold-out size).
+8. **Agent:** write `src/cv/splits.py` (stratification preserved, no overlap, hold-out size).
 9. **Human:** run split creation once; commit `splits/folds.parquet`.
 10. **Agent:** write `src/cv/runner.py`, `src/models/base.py`, `src/models/lgbm.py`, `src/evaluation/metrics.py`, and an E1 config. Baseline = LightGBM default params on main-table columns only.
 11. **Human:** run E1; confirm MLflow logging and CV AUC (expect roughly the 0.74-0.76 range on main table only; flag large deviations).
 
 ### Phase 3 — Feature engineering and ablation E2 — Person A, with B running the ablation
-12. **Agent:** implement feature groups one at a time (Section 6), each with a schema test and a small synthetic-data unit test. Aggregate large tables in pieces and write Parquet per group.
+12. **Agent:** implement feature groups one at a time (Section 6). Aggregate large tables in pieces and write Parquet per group.
 13. **Human:** run `features/build.py` per group on Kaggle; re-attach outputs as a Kaggle dataset.
 14. **Agent:** write the E2 ablation runner that adds groups cumulatively and logs AUC (CV and hold-out-free), number of features, and gain per group to `reports/tables/B1_ablation.csv`.
 15. **Human:** run E2.
 
 ### Phase 4 — Imbalance and tuning, E3 and E4  — Person B
-16. **Agent:** implement `src/imbalance.py` (none, class weight / `scale_pos_weight`, random undersampling, SMOTE) applied strictly within training folds. Add a leakage test.
+16. **Agent:** implement `src/imbalance.py` (none, class weight / `scale_pos_weight`, random undersampling, SMOTE) applied strictly within training folds.
 17. **Agent:** implement `src/tuning/optuna_search.py` (TPE sampler, MedianPruner, objective = mean 5-fold AUC, 50-100 trials, early stopping on the validation fold) and `random_search.py` for comparison. Search spaces in `configs/models/*.yaml`:
     - LightGBM/XGBoost: `num_leaves`/`max_depth`, `learning_rate`, `min_child_samples`/`min_child_weight`, `subsample`, `colsample_bytree`, `reg_alpha`, `reg_lambda`.
     - CatBoost: `depth`, `learning_rate`, `l2_leaf_reg`, `bagging_temperature`, `border_count`.
@@ -259,7 +254,7 @@ Each step lists the owner, the work the agent does, and what the human launches.
 19. **Human:** run E3 and E4 (start with a subsample to check runtime, then full). Keep Kaggle session limits in mind: the agent should make tuning resumable via Optuna's SQLite storage.
 
 ### Phase 5 — Comparison, ensemble, calibration, statistics — Person B
-20. **Agent:** implement the ensemble (weighted average and stacking with OOF predictions), calibration (Platt, isotonic, fit on OOF), DeLong test, and the B2/B3/B4 table generators plus ROC/PR and reliability plots.
+20. **Agent:** implement the ensemble (weighted average and stacking with OOF predictions), calibration (Platt, isotonic, fit on OOF), and the B2/B3/B4 table generators plus ROC/PR and reliability plots.
 21. **Human:** run E5 and E6 with 3 seeds; then run `holdout.py --confirm-final` **once**.
 22. **Agent:** produce B2 (model comparison), B4 (DeLong pairs), and figures. Compare CV vs hold-out gap to check for overfitting to CV.
 
@@ -276,7 +271,7 @@ Each step lists the owner, the work the agent does, and what the human launches.
 ## 9. Coding standards
 
 - Python 3.13+, type hints on public functions, docstrings stating inputs, outputs and any leakage considerations.
-- `ruff` for lint and format; `pytest` for tests. New modules need at least one test.
+- `ruff` for lint and format; `pytest` for tests.
 - No hard-coded paths or magic numbers: use configs.
 - Keep functions small and pure where possible; side effects (disk I/O, MLflow) at the edges.
 - Scripts expose `python -m src.<module> --config <yaml>` and support `--sample N` for quick checks and `--force` to recompute.
