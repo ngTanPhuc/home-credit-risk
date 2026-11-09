@@ -75,7 +75,7 @@ rm home-credit-default-risk.zip
 cd ../..
 ```
 
-Alternatively, download the zip manually from the competition's **Data** tab and unzip it into `data/raw/`.
+Alternatively, download the zip manually from the competition's **Data** tab and unzip it into `data/raw/` (Recommend cách này cho đỡ rối).
 
 Expected files (row counts are approximate — verify after download):
 

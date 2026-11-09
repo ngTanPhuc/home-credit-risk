@@ -1,0 +1,57 @@
+[project]
+name = "home-credit-risk"
+version = "0.1.0"
+description = "Credit risk scoring on Home Credit data with gradient-boosted trees, feature engineering, tuning, calibration, and explanation."
+readme = "README.md"
+requires-python = ">=3.13"
+
+# Core runtime dependencies, per INIT.md Section 3.
+# Pinned versions live in uv.lock; edit this list with `uv add` / `uv remove`.
+dependencies = [
+    "catboost>=1.2",
+    "imbalanced-learn>=0.12",
+    "lightgbm>=4.5",
+    "matplotlib>=3.9",
+    "mlflow>=3.0",
+    "numpy>=2.0",
+    "optuna>=4.0",
+    "pandas>=2.2",
+    "pyarrow>=17.0",
+    "pyyaml>=6.0",
+    "scikit-learn>=1.5",
+    "shap>=0.46",
+    "xgboost>=2.1",
+]
+
+# `uv sync` installs the dev group by default.
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.11",
+]
+
+[tool.uv]
+# This repository is an application, not an installable package: run modules
+# with `python -m src.<module>`, so uv should never build/install the project.
+package = false
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+markers = [
+    "slow: marks tests that take more than a few seconds",
+    "integration: marks tests that need real data or trained artifacts",
+]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
