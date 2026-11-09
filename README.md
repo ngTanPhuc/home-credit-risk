@@ -1,4 +1,4 @@
-# Home Credit Credit Risk Scoring
+# Home Credit Risk Scoring
 
 Building a credit risk scoring pipeline on the Kaggle **Home Credit Default Risk** dataset: gradient-boosted trees with feature engineering, tuning, calibration, and explanation.
 
@@ -37,8 +37,8 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ### 2. Clone and install
 
 ```bash
-git clone <repo-url> home-creadit-risk_v2.0
-cd home-creadit-risk_v2.0
+git clone git@github.com:ngTanPhuc/home-credit-risk.git
+cd home-creadit-risk
 uv sync
 ```
 
@@ -52,7 +52,6 @@ uv run pytest -q
 uv run ruff check .
 ```
 
-> During Phase 0, `uv sync` will fail or install nothing because dependencies are not declared yet. That is expected; complete Phase 0 step 2 first.
 
 ### 3. Get the data
 
@@ -134,25 +133,25 @@ uv run python -m src.explain.agreement --config configs/experiments/E7_explain.y
 ## Repository layout
 
 ```
-configs/            YAML configs: base, features, per-model, per-experiment
-data/raw/           Kaggle CSVs, untouched            (gitignored)
-data/interim/       Cleaned/downcast Parquet per table (gitignored)
-data/processed/     Feature tables + merged matrix     (gitignored)
-splits/folds.parquet  SK_ID_CURR, is_holdout, fold     (committed)
-src/data/           Ingestion and cleaning
-src/features/       Feature groups, build, selection
-src/cv/             Split creation and fold runner
-src/models/         Common model interface, LGBM/XGB/CatBoost, ensemble
-src/tuning/         Optuna and random search
-src/calibration.py  Platt / isotonic on OOF predictions
-src/evaluation/     Metrics, DeLong, locked hold-out script
-src/explain/        SHAP analysis and model agreement
-src/utils/          Memory downcasting and logging/MLflow helpers
-scripts/            Thin CLI wrappers
-notebooks/          EDA, results analysis, Kaggle launcher (no pipeline logic)
-tests/              Unit, schema, and leakage tests
-reports/tables/     B1-B4 CSV/Markdown/LaTeX tables
-reports/figures/    ROC/PR, tuning history, reliability, SHAP plots
+configs/              YAML configs: base, features, per-model, per-experiment
+data/raw/             Kaggle CSVs, untouched             (gitignored)
+data/interim/         Cleaned/downcast Parquet per table (gitignored)
+data/processed/       Feature tables + merged matrix     (gitignored)
+splits/folds.parquet  SK_ID_CURR, is_holdout, fold       (committed)
+src/data/             Ingestion and cleaning
+src/features/         Feature groups, build, selection
+src/cv/               Split creation and fold runner
+src/models/           Common model interface, LGBM/XGB/CatBoost, ensemble
+src/tuning/           Optuna and random search
+src/calibration.py    Platt / isotonic on OOF predictions
+src/evaluation/       Metrics, DeLong, locked hold-out script
+src/explain/          SHAP analysis and model agreement
+src/utils/            Memory downcasting and logging/MLflow helpers
+scripts/              Thin CLI wrappers
+notebooks/            EDA, results analysis, Kaggle launcher (no pipeline logic)
+tests/                Unit, schema, and leakage tests
+reports/tables/       B1-B4 CSV/Markdown/LaTeX tables
+reports/figures/      ROC/PR, tuning history, reliability, SHAP plots
 ```
 
 ## Splits and evaluation protocol
