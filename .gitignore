@@ -39,8 +39,6 @@ ENV/
 *.arrow
 *.h5
 *.hdf5
-# The one tracked data artifact: the shared fold assignment file.
-!/splits/folds.parquet
 
 # Model and tuning artifacts
 *.pkl

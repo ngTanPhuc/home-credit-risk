@@ -1,0 +1,37 @@
+# Shared paths, seeds, and evaluation settings.
+# Relative paths resolve against the repository root (the directory with pyproject.toml),
+# so the same config works locally and on Kaggle.
+
+dataset:
+  dir: data/processed/datasets
+  contract: data/processed/datasets/feature_contract.json
+
+paths:
+  tables_dir: reports/tables
+  predictions_dir: reports/predictions
+  runs_dir: reports/runs
+  figures_dir: reports/figures
+  mlruns_dir: mlruns
+
+split:
+  n_folds: 5
+  holdout_fraction: 0.2
+  metadata: data/splits/train_val_metadata.json
+
+seeds:
+  split: 42
+  model: [42]
+
+features:
+  # `auto` treats every object/string/category column as categorical.
+  categorical_features: auto
+
+metrics:
+  ece_bins: 15
+  thresholds: [0.1, 0.2, 0.3, 0.4, 0.5]
+
+mlflow:
+  tracking_uri: mlruns
+
+logging:
+  level: INFO

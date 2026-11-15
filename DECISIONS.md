@@ -2,3 +2,13 @@
 - 26-11-09:
   - Begin with LightGBM baseline, main table only for the baseline.
   - Write src/cv/splits.py, src/cv/runner.py, src/models/base.py, src/models/lgbm.py, src/evaluation/metrics.py.
+- 26-11-15:
+  - One split protocol only: `data/splits/{train,val}.parquet` + `train_val_metadata.json` (hold-out seed 2026, CV seed 42, 20% hold-out), created once by notebook 01. `splits/folds.parquet` is deleted; nothing re-splits.
+  - `fold` is copied into `data/processed/datasets/train.parquet`, so the dataset is the single modelling input and no join is needed at run time.
+  - `data/processed/datasets/feature_contract.json` (`datasets_v1`, 180 predictors, 16 categorical) is the schema source of truth. No copy under `configs/`; `configs/features.yaml` only references contract columns.
+  - Deleted the `src/data/` and `src/features/` stubs. Person A's notebooks 01..04 own ingestion, cleaning, features and dataset assembly; `src/` only models.
+  - E1 feature set is `main` = the 120 raw application columns. The 10 engineered application ratios enter E2 at the second rung.
+  - Tuning is Optuna TPE only; the random-search comparison arm is dropped.
+  - The SMOTE arm uses SMOTENC with the contract's categorical columns, fitted inside each training fold.
+  - XGBoost and CatBoost wrappers belong to Phase 4 (tuning needs them), not Phase 5.
+  - Metrics: report the 0.5 threshold plus the threshold sweep from config, with 15 ECE bins. `compute_metrics` adapts `all_metrics`; that function's body stays as written by the human.
