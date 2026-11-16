@@ -215,7 +215,7 @@ One MLflow experiment per ID (`E1_baseline`, ...). Run name format: `<model>_<va
 - Docs: INIT §4 tree, §5 split protocol, §8 phases, E4/RQ3 drop random search; README (6 stale `folds.parquet` refs); AGENTS; new `DECISIONS.md` entries (split = `data/splits` + datasets, holdout seed 2026, Optuna only).
 - Flag, not delete: stale `reports/predictions/E1_baseline_lgbm_seed42_oof.parquet` (built on the deleted split), `data/raw/mlflow.db`. Say the word and I list them for you to remove.
 
-## Phase 1 — E1
+## Phase 1 — E1 [DONE]
 
 Runner + `BaseModel` + LightGBM wrapper, I write, you review and run. E1 features = `application_original` only (120), so the 10 `application` ratios enter at E2 step 2. Outputs: OOF `reports/predictions/E1_baseline_lgbm_seed42_oof.parquet`, fold metrics + importance CSV in `reports/tables/`, MLflow run. Expected ~5 min, under 1 GB.
 
