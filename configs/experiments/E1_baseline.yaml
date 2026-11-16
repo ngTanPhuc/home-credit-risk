@@ -15,11 +15,12 @@ features:
   use_set: main
 
 outputs:
-  folds_csv: reports/tables/E1_baseline_cv_folds_seed{seed}.csv
-  summary_csv: reports/tables/E1_baseline_cv_summary_seed{seed}.csv
-  importance_csv: reports/tables/E1_baseline_feature_importance_seed{seed}.csv
-  oof: reports/predictions/E1_baseline_lgbm_seed{seed}_oof.parquet
-  run_json: reports/runs/E1_baseline_lgbm_seed{seed}.json
+  exp: E1_26-11-16_exp01
+  folds_csv: reports/tables/{exp}/E1_baseline_cv_folds_seed{seed}.csv
+  summary_csv: reports/tables/{exp}/E1_baseline_cv_summary_seed{seed}.csv
+  importance_csv: reports/tables/{exp}/E1_baseline_feature_importance_seed{seed}.csv
+  oof: reports/predictions/{exp}/E1_baseline_lgbm_seed{seed}_oof.parquet
+  run_json: reports/runs/{exp}/E1_baseline_lgbm_seed{seed}.json
 
 mlflow:
   experiment: E1_baseline

@@ -369,7 +369,13 @@ def _render_output_path(
     sample: int | None,
 ) -> Path:
     path = resolve_path(config, f"outputs.{key}")
-    rendered = Path(str(path).format(seed=seed))
+    
+    # 1. Get the experiment name from the YAML config
+    exp_name = get_nested(config, "outputs.exp", "default_exp")
+    
+    # 2. Pass BOTH seed and exp to the format function
+    rendered = Path(str(path).format(seed=seed, exp=exp_name))
+    
     if sample is not None:
         rendered = rendered.with_name(f"{rendered.stem}_sample{sample}{rendered.suffix}")
     return rendered
