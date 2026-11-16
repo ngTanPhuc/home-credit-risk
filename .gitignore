@@ -34,6 +34,7 @@ ENV/
 !/data/processed/.gitkeep
 /data/splits/*
 !/data/splits/.gitkeep
+/reports/tables/*.csv
 
 # Generated tabular/model artifacts
 *.parquet
@@ -61,7 +62,6 @@ ENV/
 # ---------------------------------------------------------------------------
 /mlruns/
 /mlartifacts/
-/reports/runs/
 /logs/
 *.log
 
