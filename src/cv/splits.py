@@ -20,6 +20,7 @@ import pyarrow.parquet as pq
 
 PathLike = str | os.PathLike[str]
 
+# Keys that must be present in the split metadata file
 _REQUIRED_KEYS = (
     "source_sha256",
     "holdout_ratio",
@@ -33,7 +34,7 @@ _REQUIRED_KEYS = (
 
 
 def load_split_metadata(path: PathLike) -> dict[str, Any]:
-    """Load ``train_val_metadata.json`` and require the protocol fields.
+    """Load ``train_val_metadata.json`` and require the keys.
 
     Parameters
     ----------
@@ -50,7 +51,7 @@ def load_split_metadata(path: PathLike) -> dict[str, Any]:
     FileNotFoundError
         If the metadata file is missing.
     ValueError
-        If a protocol field is absent.
+        If a key is absent.
     """
     metadata_path = Path(path)
     if not metadata_path.is_file():

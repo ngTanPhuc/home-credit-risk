@@ -30,12 +30,14 @@ from src.config import get_nested, resolve_path
 
 PathLike = str | os.PathLike[str]
 
+# Files in data/processed/datasets/ that are part of the frozen dataset
 SPLIT_FILES: dict[str, str] = {
     "train": "train.parquet",
     "val": "val.parquet",
     "test": "test.parquet",
 }
 
+# The keys that must be present in the feature_contract.json file
 _CONTRACT_KEYS = (
     "version",
     "identifier_column",
@@ -114,6 +116,7 @@ def dataset_path(config: Mapping[str, Any], split: str) -> Path:
     return resolve_path(config, "dataset.dir") / SPLIT_FILES[split]
 
 
+# Most important function
 def load_split_frame(
     config: Mapping[str, Any],
     split: str,
@@ -152,6 +155,8 @@ def load_split_frame(
     ValueError
         If the file does not match the contract.
     """
+
+    # Holdout lock, prevent accidental leakage of val labels into train or test
     if split == "val" and not allow_holdout:
         raise PermissionError(
             "val.parquet carries hold-out labels; only src/evaluation/holdout.py "
@@ -172,6 +177,9 @@ def load_split_frame(
         wanted = set(columns)
         selected = [name for name in expected if name in wanted]
 
+    # Check the Parquet schema without reading data
+    # It checks if the columns in the file exactly match the columns defined in the contract
+    # If someone added a new column, deleted a column, or renamed one, it crashes
     file_columns = list(pq.read_schema(path).names)
     if file_columns != expected:
         if split == "test" and contract["target_column"] in file_columns:
@@ -184,7 +192,7 @@ def load_split_frame(
         )
 
     frame = pd.read_parquet(path, columns=selected).loc[:, selected]
-    _validate_frame(frame, split=split, contract=contract, n_folds=n_folds)
+    _validate_frame(frame, split=split, contract=contract, n_folds=n_folds)  # validate the loaded frame against the contract
     return frame
 
 
@@ -240,7 +248,8 @@ def resolve_feature_columns(
     config: Mapping[str, Any],
     contract: Mapping[str, Any],
 ) -> list[str]:
-    """Resolve the configured feature set to contract-ordered column names.
+    """Feature Selector - Resolve the configured feature set to contract-ordered column names.
+    This uses the file ``configs/features.yaml`` to select groups of features, and the contract to ensure that the selected features are valid.
 
     Config contract
     ---------------

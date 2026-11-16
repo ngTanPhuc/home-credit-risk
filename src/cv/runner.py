@@ -1,4 +1,4 @@
-"""Cross-validation runner for Person B experiments.
+"""Cross-validation runner for experiments. Uses the splits.py and dataset.py modules to load the frozen dataset and run cross-validation on the development rows only.
 
 The runner is deliberately strict about the shared protocol:
 
@@ -70,7 +70,14 @@ LOGGER = logging.getLogger(__name__)
 class CVResult:
     """Output of one seed's cross-validation run."""
 
-    oof: pd.DataFrame
+    """
+    OOF (Out-of-Fold) predictions are the predictions made by a model on the validation set during cross-validation.
+
+    In k-fold cross-validation, the dataset is divided into k folds. The model is trained on k-1 folds and validated on the remaining fold.
+    This process is repeated k times, with each fold serving as the validation set once. The predictions made on the validation sets are called OOF predictions. They are used to evaluate the model's performance and to create an ensemble of models by combining the OOF predictions from each fold.
+    """
+
+    oof: pd.DataFrame  # out-of-fold predictions
     fold_metrics: pd.DataFrame
     summary: dict[str, float]
     feature_importance: pd.DataFrame | None = None
@@ -172,6 +179,7 @@ def _resolve_categorical_features(
     raise TypeError(f"Unsupported categorical_features specification: {specification!r}")
 
 
+# Main functions for running cross-validation, saving outputs, and logging to MLflow.
 def run_cv(
     development: pd.DataFrame,
     *,
@@ -184,6 +192,7 @@ def run_cv(
     metrics_config: Mapping[str, Any] | None = None,
 ) -> CVResult:
     """Run one seed of stratified 5-fold CV on development rows only.
+    This func creates a brand new model for every fold (model_factory(seed)). It doesn't reuse weights.
 
     Parameters
     ----------
@@ -226,11 +235,15 @@ def run_cv(
     model_name = "model"
 
     for fold_id in range(n_folds):
+        # 1. Create masks based on the frozen fold column
         train_mask = fold_ids != fold_id
         validation_mask = fold_ids == fold_id
+
+        # 2. Safety check: Ensure no overlap
         if not train_mask.any() or not validation_mask.any():
             raise ValueError(f"Fold {fold_id} has no training or validation rows")
 
+        # !3. Train a FRESH model for this fold
         train_ids = set(ids[train_mask].tolist())
         validation_ids = set(ids[validation_mask].tolist())
         if train_ids & validation_ids:
@@ -247,10 +260,12 @@ def run_cv(
         )
         fit_seconds = time.perf_counter() - fit_start
 
+        # 4. Predict on the unseen validation fold
         predict_start = time.perf_counter()
         probabilities = model.predict_proba(features.loc[validation_mask])
         predict_seconds = time.perf_counter() - predict_start
 
+        # 5. Calculate metrics
         metrics = compute_metrics(
             target[validation_mask],
             probabilities,
@@ -269,6 +284,7 @@ def run_cv(
         row.update(metrics)
         fold_rows.append(row)
 
+        # 6. Collect Out-Of-Fold (OOF) predictions
         oof_parts.append(
             pd.DataFrame(
                 {
@@ -481,6 +497,7 @@ def _log_to_mlflow(
         log_artifacts(paths.values())
 
 
+# Orchestrator - this ties all the modules together, loads the config, and runs the CV experiment.
 def run_from_config(
     config: Mapping[str, Any],
     *,

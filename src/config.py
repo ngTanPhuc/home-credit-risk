@@ -7,8 +7,8 @@ Example
 ``configs/experiments/E1_baseline.yaml``:
 
     extends:
-      - ../base.yaml
-      - ../models/lightgbm.yaml
+        - ../base.yaml
+        - ../models/lightgbm.yaml
 
     experiment: E1_baseline
 
