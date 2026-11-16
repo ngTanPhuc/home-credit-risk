@@ -12,3 +12,5 @@
   - The SMOTE arm uses SMOTENC with the contract's categorical columns, fitted inside each training fold.
   - XGBoost and CatBoost wrappers belong to Phase 4 (tuning needs them), not Phase 5.
   - Metrics: report the 0.5 threshold plus the threshold sweep from config, with 15 ECE bins. `compute_metrics` adapts `all_metrics`; that function's body stays as written by the human.
+- 26-11-16:
+  - E1 reference point: LightGBM defaults, feature set `main` (120 columns), 5-fold CV, seed 42. OOF ROC-AUC 0.75421 ± 0.00337 (folds 0.7501–0.7589), Gini 0.5084, KS 0.3801, PR-AUC 0.2382 (baseline 0.0807), Brier 0.06810 (baseline 0.07421), ECE 0.00462. At 0.5: precision 0.551, recall 0.020 — expected at an 8% base rate. Run cost 12.0 s, 2.0 GB peak RSS; hold-out untouched. Every later phase is measured against this.
