@@ -67,7 +67,7 @@ chmod 600 ~/.kaggle/kaggle.json
 Download and unpack into `data/raw/` (the only place raw data may live; never modify it):
 
 ```bash
-uvx kaggle competitions download -c home-credit-default-risk -p data/raw
+uvx --with six kaggle competitions download -c home-credit-default-risk -p data/raw
 cd data/raw
 unzip home-credit-default-risk.zip
 rm home-credit-default-risk.zip
