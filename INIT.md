@@ -53,8 +53,8 @@ Figures are approximate; verify after download.
 
 The team has 2 humans. Roles are by pipeline layer so people rarely edit the same files.
 
-- **Person A — data and features:** `notebooks/01..04` (ingestion, cleaning, feature engineering, dataset assembly), `data/`, EDA, E2.
-- **Person B — modeling and evaluation:** `src/cv`, `src/models`, `src/tuning`, `src/calibration`, `src/evaluation`, `src/explain`, E1, E3-E7.
+- **Person A — data and features:** `notebooks/01..04` (ingestion, cleaning, feature engineering, dataset assembly), `data/`, EDA, and the feature groups plus feature catalog for E2.
+- **Person B — modeling and evaluation:** `src/cv`, `src/models`, `src/tuning`, `src/calibration`, `src/evaluation`, `src/explain`, E1, the E2 experiments and `B1_ablation.csv`, E3-E7.
 - **Shared contract:** the dataset schema `data/processed/datasets/feature_contract.json` (Section 6) and the frozen split (Section 5).
 
 ### What the agent MAY do
@@ -90,7 +90,7 @@ When unsure, stop and ask. Prefer a short question over a large wrong change.
 1. Code lives in the GitHub repo; the Kaggle notebook clones or pulls the repo (or the repo is attached as a Kaggle dataset) and runs scripts via `python -m src.<module> --config configs/<file>.yaml`.
 2. Raw data comes from the Kaggle competition input; processed Parquet files are saved to `/kaggle/working` and re-attached as a Kaggle dataset so later sessions do not recompute.
 3. Every script must be **resumable**: write intermediate outputs to disk and skip steps whose outputs already exist (unless `--force`).
-4. Keep a tiny launcher notebook `notebooks/kaggle_launcher.ipynb` that only installs deps, sets paths, and calls scripts. No pipeline logic in notebooks.
+4. Keep any Kaggle launcher notebook tiny: install deps, set paths, and call scripts. No pipeline logic in notebooks.
 
 ---
 
@@ -123,8 +123,7 @@ When unsure, stop and ask. Prefer a short question over a large wrong change.
 │   ├── 01_data_overview_eda.ipynb
 │   ├── 02_data_cleaning.ipynb
 │   ├── 03_feature_engineering.ipynb
-│   ├── 04_dataset_assembly_validation.ipynb
-│   └── kaggle_launcher.ipynb
+│   └── 04_dataset_assembly_validation.ipynb
 ├── src/
 │   ├── __init__.py
 │   ├── config.py            # load/merge YAML, resolve paths, set seeds
@@ -225,7 +224,7 @@ Any change to column names or the merge key is a schema change: update `DECISION
 ---
 
 
-## 9. Coding standards
+## 8. Coding standards
 
 - Python 3.13+, type hints on public functions, docstrings stating inputs, outputs and any leakage considerations.
 - `ruff` for lint and format; `pytest` for tests.
@@ -235,14 +234,14 @@ Any change to column names or the merge key is a schema change: update `DECISION
 - Logging via the `logging` module, not `print`.
 - Notebooks 01..04 are Person A's standalone data pipeline (Vietnamese prose, no `src/` imports). Analysis notebooks from 05 on import from `src/` and hold no pipeline logic.
 
-## 10. Experiment tracking conventions
+## 9. Experiment tracking conventions
 
 - One MLflow experiment per ID (`E1_baseline`, `E2_ablation`, ...).
 - Run name: `<model>_<variant>_seed<k>`.
 - Log: full resolved config, feature group list and count, fold AUCs, mean and std, OOF predictions path, training time, inference time, peak memory.
 - Tag each run with `git_commit` (read from the repo, never created by the agent) and `data_version`.
 
-## 11. Known risks and mitigations
+## 10. Known risks and mitigations
 
 | Risk | Mitigation |
 |---|---|
@@ -253,7 +252,7 @@ Any change to column names or the merge key is a schema change: update `DECISION
 | Tuning takes too long | MedianPruner, tune on a subsample first, cap trials |
 | Teammates break each other's schema | Feature schema test; changes logged in `DECISIONS.md` |
 
-## 12. How the agent should respond on each task
+## 11. How the agent should respond on each task
 
 1. State briefly which phase and step the task belongs to.
 2. List the files it will create or change.
@@ -262,6 +261,6 @@ Any change to column names or the merge key is a schema change: update `DECISION
 5. Mention any decision that should be added to `DECISIONS.md`, and suggest a branch name and commit message (but do not run git).
 6. Flag anything uncertain, and any assumption about the data that must be verified after download.
 
-## 13. Out of scope
+## 12. Out of scope
 
 Production deployment, reject inference, in-depth fairness analysis (mention only in the discussion section), and sequence models (RNN/Transformer on transaction histories) unless explicitly approved.

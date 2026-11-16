@@ -4,7 +4,7 @@ Building a credit risk scoring pipeline on the Kaggle **Home Credit Default Risk
 
 The task is binary classification on seven relational tables. For each applicant in `application_train`, predict `P(TARGET = 1 | x)`, then calibrate the probability and explain the drivers. Positives are roughly 8% of the data.
 
-> **Project status: Phase 0 done, E1 ready.** Person A's dataset is frozen (`data/processed/datasets/`, contract `datasets_v1`, 180 predictors), the split protocol is single and fixed, `src/cv` + `src/models` + `src/evaluation/metrics.py` are implemented, and `tests/` passes. The notebooks 01..04 build the data; `src/` only models it. See `INIT.md` for the authoritative plan and `AGENTS.md` for the current state.
+> **Project status: Phases 0-3 done, E1 baseline logged, Phase 4 (E2 ablation) in progress.** Person A's dataset is frozen (`data/processed/datasets/`, contract `datasets_v1`, 180 predictors), the split protocol is single and fixed, `src/cv` + `src/models` + `src/evaluation/metrics.py` are implemented, and `tests/` passes (28 tests). The notebooks 01..04 build the data; `src/` only models it. `AGENTS.md` defines the workflow, phases and ownership; `INIT.md` holds the research questions, dataset specification and methodology.
 
 ## Scope
 
@@ -38,7 +38,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 ```bash
 git clone git@github.com:ngTanPhuc/home-credit-risk.git
-cd home-creadit-risk
+cd home-credit-risk
 uv sync
 ```
 
@@ -205,7 +205,7 @@ Kaggle sessions are time- and memory-limited (16 GB RAM ceiling):
 1. Push code to GitHub, then clone/pull it in the notebook, or attach the repo as a Kaggle dataset.
 2. Raw data is mounted read-only under `/kaggle/input/home-credit-default-risk/`.
 3. Write processed Parquet and `mlruns/` to `/kaggle/working/`, then re-attach them as a Kaggle dataset so later sessions skip recomputation.
-4. Keep `notebooks/kaggle_launcher.ipynb` thin: install/sync deps, set paths, call `python -m src.<module> --config ...`.
+4. Keep any Kaggle launcher notebook thin: install/sync deps, set paths, call `python -m src.<module> --config ...`. No pipeline logic in notebooks.
 5. Heavy steps are resumable: skip existing outputs unless `--force`; use Optuna SQLite storage for tuning.
 
 ## Outputs
@@ -218,16 +218,18 @@ Kaggle sessions are time- and memory-limited (16 GB RAM ceiling):
 
 | Role | Owns |
 |---|---|
-| Person A — data & features | `notebooks/01..04`, `data/`, EDA, E2 |
-| Person B — modeling & evaluation | `src/cv`, `src/models`, `src/tuning`, `src/calibration`, `src/evaluation`, `src/explain`, E1, E3-E7 |
+| Person A — data & features | `notebooks/01..04`, `data/`, EDA, feature groups and feature catalog for E2 |
+| Person B — modeling & evaluation | `src/cv`, `src/models`, `src/tuning`, `src/calibration`, `src/evaluation`, `src/explain`, E1, E2 experiments + `B1_ablation.csv`, E3-E7 |
+
+E2 is shared: Person A prepares and validates the feature groups, Person B implements and runs the cumulative ablation and produces `B1_ablation.csv`.
 
 Shared contracts: `data/processed/datasets/feature_contract.json` (schema, predictor order, categorical columns) and the frozen split. Any column-name or key change must be recorded in `DECISIONS.md` and communicated.
 
 ## Documentation
 
-- `INIT.md` — authoritative specification: phases, ownership, schema, hard rules.
+- `AGENTS.md` — authoritative workflow: phases, ownership, implementation responsibilities, coding constraints, validation.
+- `INIT.md` — research context: objectives, research questions, dataset specification, methodology, schema, hard rules.
 - `DECISIONS.md` — append-only log of design decisions and why.
-- `AGENTS.md` — instructions for AI coding agents working in this repo.
 
 ## Troubleshooting
 
