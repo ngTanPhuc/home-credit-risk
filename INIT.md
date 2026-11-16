@@ -224,55 +224,6 @@ Any change to column names or the merge key is a schema change: update `DECISION
 
 ---
 
-## 8. Workflow, step by step
-
-Each step lists the owner, the work the agent does, and what the human launches. The agent writes code; the human runs it.
-
-### Phase 0 — Contract and repo cleanup
-1. **Agent:** verify Person A's artifacts (`data/processed/datasets/{train,val,test}.parquet`, `feature_contract.json`, `dataset_manifest.json`) and the frozen split in `data/splits/`; record the contract and the single split protocol in `DECISIONS.md`.
-2. **Agent:** write `src/config.py`, `src/utils/`, `src/cv/dataset.py`, `src/cv/splits.py`, `src/cv/runner.py`, `src/models/{base,lgbm}.py`, `src/evaluation/metrics.py`, `configs/{base,features}.yaml`, the E1 config, and `tests/`.
-3. **Human:** `uv sync`, run the `--sample` smoke command, commit to a branch, push.
-
-### Phase 1 — Data ingestion and EDA — Person A
-4. **Agent:** write `notebooks/01_data_overview_eda.ipynb`: load each CSV to downcast Parquet in `data/interim/`, chunked for the large tables (`bureau_balance`, `installments_payments`, `POS_CASH_balance`, `credit_card_balance`), then create the split in `data/splits/`.
-5. **Agent:** write `notebooks/02_data_cleaning.ipynb`: replace `DAYS_EMPLOYED == 365243` with NaN plus a binary flag, handle `XNA` in `CODE_GENDER` and other columns, document `DAYS_*` sign conventions, write `cleaning_manifest.json`.
-6. **Human:** run notebooks 01 and 02 on Kaggle; verify row counts against Section 1.
-7. **Agent:** review the EDA outputs in `reports/tables/` (missingness, target rate, anomalies, join coverage).
-
-### Phase 2 — Baseline E1 — Person B
-8. **Agent:** write `src/cv/splits.py` (validates `train_val_metadata.json` against dataset row counts; never creates a split) and `src/cv/dataset.py` (contract-driven loading, feature-set resolution, hold-out lock).
-9. **Human:** run notebook 01 once; keep `data/splits/train_val_metadata.json` and never regenerate it.
-10. **Agent:** write `src/cv/runner.py`, `src/models/base.py`, `src/models/lgbm.py`, `src/evaluation/metrics.py`, and the E1 config. Baseline = LightGBM default params on the 120 raw application columns (`main`).
-11. **Human:** run E1; confirm MLflow logging and CV AUC (expect roughly the 0.74-0.76 range on main table only; flag large deviations).
-
-### Phase 3 — Feature engineering and ablation E2 — Person A, with B running the ablation
-12. **Agent:** implement the feature groups (Section 6) in `notebooks/03_feature_engineering.ipynb` and assemble the dataset in `notebooks/04_dataset_assembly_validation.ipynb`. Aggregate large tables in pieces and write Parquet per group.
-13. **Human:** run notebooks 03 and 04 on Kaggle; re-attach the outputs as a Kaggle dataset.
-14. **Agent:** regenerate `configs/features.yaml` from `reports/tables/feature_catalog.csv`, then write the E2 configs that add the cumulative sets one at a time and log AUC (CV only), number of features, and gain per group to `reports/tables/B1_ablation.csv`.
-15. **Human:** run E2.
-
-### Phase 4 — Imbalance and tuning, E3 and E4  — Person B
-16. **Agent:** implement `src/imbalance.py` (none, class weight / `scale_pos_weight`, random undersampling, SMOTENC on the contract categoricals) applied strictly within training folds.
-17. **Agent:** implement `src/tuning/optuna_search.py` (TPE sampler, MedianPruner, objective = mean 5-fold AUC, 50-100 trials, early stopping on the validation fold). Search spaces in `configs/models/*.yaml`:
-    - LightGBM/XGBoost: `num_leaves`/`max_depth`, `learning_rate`, `min_child_samples`/`min_child_weight`, `subsample`, `colsample_bytree`, `reg_alpha`, `reg_lambda`.
-    - CatBoost: `depth`, `learning_rate`, `l2_leaf_reg`, `bagging_temperature`, `border_count`.
-18. **Agent:** add XGBoost and CatBoost wrappers behind the same interface. Use native categorical handling for LightGBM and CatBoost; out-of-fold target encoding for XGBoost.
-19. **Human:** run E3 and E4 (start with a subsample to check runtime, then full). Keep Kaggle session limits in mind: the agent should make tuning resumable via Optuna's SQLite storage.
-
-### Phase 5 — Comparison, ensemble, calibration, statistics — Person B
-20. **Agent:** implement the ensemble (weighted average and stacking with OOF predictions), calibration (Platt, isotonic, fit on OOF), and the B2/B3/B4 table generators plus ROC/PR and reliability plots.
-21. **Human:** run E5 and E6 with 3 seeds; then run `holdout.py --confirm-final` **once**.
-22. **Agent:** produce B2 (model comparison), B4 (DeLong pairs), and figures. Compare CV vs hold-out gap to check for overfitting to CV.
-
-### Phase 6 — Explanation, E7
-23. **Agent:** implement SHAP global (summary, dependence), local (waterfall for one rejected and one approved applicant), 3-5 reason codes per rejected applicant, and `agreement.py` (top-k Jaccard, Spearman across LightGBM, XGBoost, CatBoost).
-24. **Human:** run on a sampled subset of rows if SHAP is slow.
-
-### Phase 7 — Writing and delivery
-25. **Agent:** help with `notebooks/05_results_analysis.ipynb`, final README with reproduction steps, and report skeleton (introduction, related work, method, experiments, conclusion).
-26. **Optional milestones** (only if time and the human agrees): Kaggle submission on `application_test`; a Streamlit demo returning probability and reason codes; one DL baseline (MLP or TabNet) under the same protocol.
-
----
 
 ## 9. Coding standards
 

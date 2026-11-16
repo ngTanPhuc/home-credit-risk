@@ -198,54 +198,6 @@ reports/figures/      ROC/PR, tuning history, reliability, SHAP plots
 
 One MLflow experiment per ID (`E1_baseline`, ...). Run name format: `<model>_<variant>_seed<k>`. Log the resolved config, feature count, fold AUCs, mean/std, artifact paths, timing, peak memory, and git commit.
 
-## Phases
-
-## Phase 0 — contract and cleanup (no modelling) [DONE]
-
-- Delete `src/data/` and `src/features/` (0-byte, pipeline is notebooks). Delete `src/tuning/random_search.py`.
-- Recover `src/config.py`, `src/utils/{logging,memory}.py`, `src/models/base.py`, `src/cv/runner.py` from `backup/feature/train`, then rewire:
-  - input: `data/processed/datasets/train.parquet` (ID, TARGET, fold, 180 predictors), no `splits/folds.parquet`
-  - fold source: `fold` column in `train.parquet`; holdout = `val.parquet`, labels read only by `holdout.py`
-  - contract check at load: `data/processed/datasets/feature_contract.json` (columns, 16 categoricals, no TARGET in test), fail loud if `data/` is missing
-  - metrics: call your `all_metrics`, keep it unchanged
-  - `string` → `category` cast before LightGBM, categories fixed from fold-training
-- New `configs/features.yaml`: group → column ladder (120/130/147/157/163/171/180), generated once from `reports/tables/feature_catalog.csv`. Experiment definition, not a contract copy, so it stays in `configs/` per your choice.
-- `configs/base.yaml`, `configs/models/lightgbm.yaml`, `configs/experiments/E1_baseline.yaml`.
-- `tests/`: dataset contract, fold disjointness + no holdout leakage, metrics on known arrays, per-fold fit/transform guard.
-- Docs: INIT §4 tree, §5 split protocol, §8 phases, E4/RQ3 drop random search; README (6 stale `folds.parquet` refs); AGENTS; new `DECISIONS.md` entries (split = `data/splits` + datasets, holdout seed 2026, Optuna only).
-- Flag, not delete: stale `reports/predictions/E1_baseline_lgbm_seed42_oof.parquet` (built on the deleted split), `data/raw/mlflow.db`. Say the word and I list them for you to remove.
-
-## Phase 1 — E1 [DONE]
-
-Runner + `BaseModel` + LightGBM wrapper, I write, you review and run. E1 features = `application_original` only (120), so the 10 `application` ratios enter at E2 step 2. Outputs: OOF `reports/predictions/E1_baseline_lgbm_seed42_oof.parquet`, fold metrics + importance CSV in `reports/tables/`, MLflow run. Expected ~5 min, under 1 GB.
-
-## Phase 2 — E2
-
-Seven cumulative sets on the same folds. `B1_ablation.csv` = set, n_features, fold AUCs, mean/std, delta vs previous. RQ1 answered without time windows; state that in the report.
-
-## Phase 3 — E3
-
-None / `class_weight='balanced'` / RandomUnderSampler / SMOTENC on the 16 contract categoricals, every arm inside fold-training only. SMOTENC returns floats, so cast categoricals back to `category` with fold-training categories before fitting. ~30-60 min.
-
-## Phase 4 — E4 (wrappers move here)
-
-XGB + CatBoost wrappers behind the same interface, then default vs Optuna TPE + MedianPruner, objective mean 5-fold AUC, early stopping on the validation fold, SQLite storage for resume. Trial-count curve from the Optuna history. 3 models × 5 folds is hours, so you run it on Kaggle; I will give caps (suggest 40 trials/model, subsample first to time it).
-
-## Phase 5 — E5
-
-Three GBDTs on the tuned set, weighted average, stacking on OOF, seeds `[42, 43, 44]`. `B2_model_comparison.csv` + ROC/PR figures.
-
-## Phase 6 — E6
-
-Platt and isotonic fit on dev OOF, reliability diagrams, Brier + ECE at 15 bins. Freeze model choice, then one `holdout.py --confirm-final` run that emits `B3_calibration.csv`, `B4_delong_pairs.csv` and final metrics together. Second run = protocol violation.
-
-## Phase 7 — E7
-
-SHAP on a 10k sample, global + local, waterfall for one approved and one rejected applicant, 3-5 reason codes, top-k Jaccard + Spearman across the three models. Reads holdout features only, never labels.
-
-## Phase 8
-
-Consolidate B1-B4, method and findings, reproduction steps, optional submission from `test.parquet`.
 ## Kaggle workflow
 
 Kaggle sessions are time- and memory-limited (16 GB RAM ceiling):
