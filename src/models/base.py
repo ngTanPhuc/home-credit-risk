@@ -26,8 +26,13 @@ class BaseModel(ABC):
         target: pd.Series | np.ndarray,
         *,
         categorical_features: Sequence[str] | None = None,
+        sample_weight: np.ndarray | Sequence[float] | None = None,
     ) -> BaseModel:
-        """Fit the model on training-fold rows and return ``self``."""
+        """Fit the model on training-fold rows and return ``self``.
+
+        ``sample_weight`` is aligned with ``target`` and is ``None`` when the
+        imbalance variant does not weight rows.
+        """
 
     @abstractmethod
     def predict_proba(self, features: pd.DataFrame) -> np.ndarray:

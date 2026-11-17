@@ -36,6 +36,7 @@ ENV/
 !/data/splits/.gitkeep
 /reports/tables/*.csv
 !/reports/tables/B*
+!/reports/tables/E*
 
 # Generated tabular/model artifacts
 *.parquet

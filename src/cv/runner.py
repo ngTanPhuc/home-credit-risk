@@ -50,6 +50,7 @@ from src.cv.splits import (
     validate_split_metadata,
 )
 from src.evaluation.metrics import compute_metrics
+from src.imbalance import build_strategy, spec_from_config
 from src.models.base import BaseModel
 from src.utils.logging import (
     git_commit,
@@ -190,6 +191,7 @@ def run_cv(
     n_folds: int,
     categorical_features: Any = "auto",
     metrics_config: Mapping[str, Any] | None = None,
+    imbalance: Any = "none",
 ) -> CVResult:
     """Run one seed of stratified 5-fold CV on development rows only.
     This func creates a brand new model for every fold (model_factory(seed)). It doesn't reuse weights.
@@ -203,6 +205,9 @@ def run_cv(
         Callable returning a fresh model for the given seed.
     metrics_config:
         ``thresholds`` and ``ece_bins`` settings.
+    imbalance:
+        Imbalance strategy name or mapping, rebuilt inside every fold and
+        applied to the training rows only.
 
     Notes
     -----
@@ -225,6 +230,7 @@ def run_cv(
         raise AssertionError("TARGET leaked into the feature matrix")
 
     categorical = _resolve_categorical_features(features, categorical_features)
+    build_strategy(imbalance, seed=seed)  # fail fast on an unknown variant
     metric_settings = dict(metrics_config or {})
     thresholds = tuple(metric_settings.get("thresholds", (0.5,)))
     ece_bins = int(metric_settings.get("ece_bins", 15))
@@ -252,11 +258,18 @@ def run_cv(
         model = model_factory(seed)
         model_name = model.name
 
+        strategy = build_strategy(imbalance, seed=seed)
         fit_start = time.perf_counter()
-        model.fit(
+        train_features, train_target, train_weight = strategy.fit_resample(
             features.loc[train_mask],
             target[train_mask],
             categorical_features=categorical,
+        )
+        model.fit(
+            train_features,
+            train_target,
+            categorical_features=categorical,
+            sample_weight=train_weight,
         )
         fit_seconds = time.perf_counter() - fit_start
 
@@ -274,9 +287,11 @@ def run_cv(
         )
         row: dict[str, Any] = {
             "model": model_name,
+            "imbalance": strategy.name,
             "seed": int(seed),
             "fold": int(fold_id),
             "n_train": int(train_mask.sum()),
+            "n_train_fit": int(len(train_features)),
             "n_valid": int(validation_mask.sum()),
             "fit_seconds": float(fit_seconds),
             "predict_seconds": float(predict_seconds),
@@ -303,13 +318,14 @@ def run_cv(
             importance_parts.append(importance.rename(f"fold_{fold_id}"))
 
         LOGGER.info(
-            "seed=%d fold=%d: AUC=%.5f KS=%.5f Brier=%.5f (train=%d, valid=%d)",
+            "seed=%d fold=%d: AUC=%.5f KS=%.5f Brier=%.5f (train=%d fit=%d, valid=%d)",
             seed,
             fold_id,
             metrics["roc_auc"],
             metrics["ks"],
             metrics["brier"],
             int(train_mask.sum()),
+            int(len(train_features)),
             int(validation_mask.sum()),
         )
 
@@ -341,9 +357,11 @@ def _summarize_folds(fold_metrics: pd.DataFrame) -> dict[str, float]:
     """Aggregate numeric fold metrics into mean/std summary values."""
     ignored = {
         "model",
+        "imbalance",
         "seed",
         "fold",
         "n_train",
+        "n_train_fit",
         "n_valid",
     }
     summary: dict[str, float] = {
@@ -531,6 +549,7 @@ def run_from_config(
 
     columns = resolve_feature_columns(config, contract)
     categorical_features = get_nested(config, "features.categorical_features", "auto")
+    imbalance_spec = spec_from_config(config)
 
     train_frame = load_split_frame(
         config,
@@ -595,6 +614,7 @@ def run_from_config(
             n_folds=n_folds,
             categorical_features=categorical_features,
             metrics_config=metrics_config,
+            imbalance=imbalance_spec,
         )
         elapsed = time.perf_counter() - start
 

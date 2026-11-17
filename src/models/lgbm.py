@@ -57,6 +57,7 @@ class LGBMModel(BaseModel):
         target: pd.Series | np.ndarray,
         *,
         categorical_features: Sequence[str] | None = None,
+        sample_weight: np.ndarray | Sequence[float] | None = None,
     ) -> LGBMModel:
         """Fit on training-fold rows.
 
@@ -69,6 +70,8 @@ class LGBMModel(BaseModel):
         categorical_features:
             Columns to treat as categorical. When ``None``, all object/string
             columns are detected automatically.
+        sample_weight:
+            Optional per-row weights aligned with ``target``.
 
         Notes
         -----
@@ -93,8 +96,16 @@ class LGBMModel(BaseModel):
         frame = self._encode_categories(frame, fit=True)
         self._feature_names = list(frame.columns)
 
+        weights = None
+        if sample_weight is not None:
+            weights = np.asarray(sample_weight, dtype="float64").reshape(-1)
+            if weights.shape[0] != labels.shape[0]:
+                raise ValueError("sample_weight length does not match target")
+            if not np.all(np.isfinite(weights)) or np.any(weights < 0):
+                raise ValueError("sample_weight must be finite and non-negative")
+
         self._model = LGBMClassifier(**self.params)
-        self._model.fit(frame, labels)
+        self._model.fit(frame, labels, sample_weight=weights)
         return self
 
     def predict_proba(self, features: pd.DataFrame) -> np.ndarray:

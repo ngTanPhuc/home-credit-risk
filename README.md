@@ -4,7 +4,7 @@ Building a credit risk scoring pipeline on the Kaggle **Home Credit Default Risk
 
 The task is binary classification on seven relational tables. For each applicant in `application_train`, predict `P(TARGET = 1 | x)`, then calibrate the probability and explain the drivers. Positives are roughly 8% of the data.
 
-> **Project status: Phases 0-4 done (E1 baseline, E2 ablation logged), Phase 5 (E3 imbalance) next.** Person A's dataset is frozen (`data/processed/datasets/`, contract `datasets_v1`, 180 predictors), the split protocol is single and fixed, `src/cv` + `src/models` + `src/evaluation` are implemented, and `tests/` passes. The notebooks 01..04 build the data; `src/` only models it. `AGENTS.md` defines the workflow, phases and ownership; `INIT.md` holds the research questions, dataset specification and methodology.
+> **Project status: Phases 0-5 done (E1 baseline, E2 ablation, E3 imbalance logged), Phase 6 (E4 tuning) next.** Person A's dataset is frozen (`data/processed/datasets/`, contract `datasets_v1`, 180 predictors), the split protocol is single and fixed, `src/cv` + `src/models` + `src/evaluation` are implemented, and `tests/` passes. The notebooks 01..04 build the data; `src/` only models it. `AGENTS.md` defines the workflow, phases and ownership; `INIT.md` holds the research questions, dataset specification and methodology.
 
 ## Scope
 
@@ -142,6 +142,9 @@ uv run python3 -m src.cv.runner --config configs/experiments/E1_baseline.yaml --
 # E2 cumulative feature-group ablation: every feature set plus reports/tables/B1_ablation.csv
 uv run python3 -m src.evaluation.ablation --config configs/experiments/E2_ablation.yaml
 
+# E3 imbalance handling: four variants on the same folds plus reports/tables/E3_imbalance_comparison.csv
+uv run python3 -m src.evaluation.imbalance_comparison --config configs/experiments/E3_imbalance.yaml
+
 # Tune (resumable via Optuna SQLite storage)
 uv run python3 -m src.tuning.optuna_search --config configs/experiments/E4_tuning.yaml
 
@@ -153,7 +156,7 @@ uv run python3 -m src.explain.shap_analysis --config configs/experiments/E7_expl
 uv run python3 -m src.explain.agreement --config configs/experiments/E7_explain.yaml
 ```
 
-Only the `src.cv.runner` and `src.evaluation.ablation` commands work today; the others land with their phases.
+Only the `src.cv.runner`, `src.evaluation.ablation` and `src.evaluation.imbalance_comparison` commands work today; the others land with their phases.
 
 ## Repository layout
 
