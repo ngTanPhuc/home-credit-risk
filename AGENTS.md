@@ -75,7 +75,7 @@ Implement only the phase or step requested. Do not fill unrelated stubs or oppor
 
 ## Validation before handing back
 
-Run only cheap checks: `ruff`, `pytest` (28 tests, synthetic data), config loading, `--help`, `--sample`. State what passed, what could not be run on this branch, and the exact Kaggle command plus expected runtime/memory for anything heavy.
+Run only cheap checks: `ruff`, `pytest` (45 tests, synthetic data), config loading, `--help`, `--sample`. State what passed, what could not be run on this branch, and the exact Kaggle command plus expected runtime/memory for anything heavy.
 
 ## Phases
 
@@ -111,11 +111,12 @@ Format: `Phase n - <name> - <PIC>`. Each step names who does it. **Agent** write
 19. **Human:** run E2 (start with `--sample`, then full; runtime grows with feature count).
 20. **Agent:** review B1. State in the notes that RQ1 is answered without time-window (`WIN_`) features, which were not delivered.
 
-### Phase 5 - Imbalance handling (E3) - Person B
-21. **Agent:** implement `src/imbalance.py`: none, class weight / `scale_pos_weight`, random undersampling, SMOTENC on the 16 contract categoricals. Each arm is a fit/resample object created per fold and applied only to the training part. After SMOTENC, cast categoricals back to `category` using fold-training categories.
+### Phase 5 - Imbalance handling (E3) - Person B [DONE]
+21. **Agent:** implement `src/imbalance.py`: none, class weight / `scale_pos_weight`, random undersampling, SMOTENC on the 16 contract categoricals. Each variant is a fit/resample object created per fold and applied only to the training part. After SMOTENC, cast categoricals back to `category` using fold-training categories.
 22. **Agent:** add tests that resampling never touches validation rows (`tests/test_cv_leakage.py`). Write the E3 configs.
 23. **Human:** run E3 on a subsample first, then full (expected 30-60 min).
 24. **Agent:** produce the E3 comparison table in `reports/tables/`; propose a `DECISIONS.md` entry on the chosen imbalance strategy.
+- Result: AUC 0.77836 (`none`), 0.77920 (`class_weight`, +0.00084), 0.77753 (`undersample`, −0.00083), 0.69120 (`smotenc`, −0.08716) on `plus_installments`. `class_weight` is the chosen variant for E4-E7, and its ECE 0.29946 makes E6 calibration mandatory before any probability is reported. Artifacts: `src/imbalance.py` (four variants), `src/evaluation/imbalance_comparison.py`, `configs/experiments/E3_imbalance.yaml`, `reports/tables/E3_imbalance_comparison.csv`, `reports/E3_report.md`.
 
 ### Phase 6 - Model wrappers and tuning (E4) - Person B
 25. **Agent:** add `src/models/xgb.py` (out-of-fold target encoding, fit per fold) and `src/models/catboost_model.py` (native categoricals) behind the `BaseModel` interface, with tests. LightGBM keeps native categoricals.

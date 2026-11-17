@@ -170,6 +170,7 @@ notebooks/01..04      Person A data pipeline (standalone, Vietnamese prose)
 src/cv/               Dataset/contract loading, split validation, fold runner
 src/models/           Common model interface, LGBM/XGB/CatBoost, ensemble
 src/tuning/           Optuna TPE search
+src/imbalance.py      Per-fold imbalance variants: none, class weight, undersample, SMOTENC
 src/calibration.py    Platt / isotonic on OOF predictions
 src/evaluation/       Metrics, DeLong, locked hold-out script
 src/explain/          SHAP analysis and model agreement
@@ -196,13 +197,15 @@ reports/figures/      ROC/PR, tuning history, reliability, SHAP plots
 |---|---|---|
 | E1 | LightGBM baseline (optional LR), main table only | Reference point |
 | E2 | Cumulative feature-group ablation | RQ1 |
-| E3 | Imbalance handling: none, class weight, undersampling, SMOTE (in-fold) | RQ3 |
+| E3 | Imbalance handling: none, class weight, undersampling, SMOTENC (in-fold) | RQ3 |
 | E4 | Tuning: default vs Optuna TPE | RQ3 |
 | E5 | Model comparison on the full tuned feature set | RQ2 |
 | E6 | Calibration: none vs Platt vs isotonic | RQ2 |
 | E7 | SHAP explanation and cross-model agreement | RQ4 |
 
 One MLflow experiment per ID (`E1_baseline`, ...). Run name format: `<model>_<variant>_seed<k>`. Log the resolved config, feature count, fold AUCs, mean/std, artifact paths, timing, peak memory, and git commit.
+
+E3 is done: AUC 0.77836 (`none`), 0.77920 (`class_weight`), 0.77753 (`undersample`), 0.69120 (`smotenc`) on `plus_installments`. `class_weight` is the chosen variant for E4-E7, but its ECE 0.29946 (vs 0.00434 for `none`) makes E6 calibration mandatory before any probability is reported. See `reports/E3_report.md`.
 
 ## Kaggle workflow
 
@@ -217,6 +220,8 @@ Kaggle sessions are time- and memory-limited (16 GB RAM ceiling):
 ## Outputs
 
 - `reports/tables/B1_ablation.csv`, `B2_model_comparison.csv`, `B3_calibration.csv`, `B4_delong_pairs.csv`
+- `reports/tables/E3_imbalance_comparison.csv` and per-variant fold/summary/importance CSVs under `reports/tables/E3_<run>/`
+- Per-experiment reports: `reports/E1_report.md`, `reports/E2_report.md`, `reports/E3_report.md`
 - `reports/figures/`: ROC/PR curves, Optuna history, reliability diagrams, SHAP summary/dependence/waterfall, importance-agreement heatmap
 - `mlruns/`: local MLflow tracking (gitignored)
 
