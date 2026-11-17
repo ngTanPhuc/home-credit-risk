@@ -7,10 +7,14 @@
   - `fold` is copied into `data/processed/datasets/train.parquet`, so the dataset is the single modelling input and no join is needed at run time.
   - `data/processed/datasets/feature_contract.json` (`datasets_v1`, 180 predictors, 16 categorical) is the schema source of truth. No copy under `configs/`; `configs/features.yaml` only references contract columns.
   - Deleted the `src/data/` and `src/features/` stubs. Person A's notebooks 01..04 own ingestion, cleaning, features and dataset assembly; `src/` only models.
-  - E1 feature set is `main` = the 120 raw application columns. The 10 engineered application ratios enter E2 at the second rung.
+  - E1 feature set is `main` = the 120 raw application columns. The 10 engineered application ratios enter E2 at the second feature set.
   - Tuning is Optuna TPE only; the random-search comparison arm is dropped.
   - The SMOTE arm uses SMOTENC with the contract's categorical columns, fitted inside each training fold.
   - XGBoost and CatBoost wrappers belong to Phase 4 (tuning needs them), not Phase 5.
   - Metrics: report the 0.5 threshold plus the threshold sweep from config, with 15 ECE bins. `compute_metrics` adapts `all_metrics`; that function's body stays as written by the human.
 - 26-11-16:
   - E1 reference point: LightGBM defaults, feature set `main` (120 columns), 5-fold CV, seed 42. OOF ROC-AUC 0.75421 ± 0.00337 (folds 0.7501–0.7589), Gini 0.5084, KS 0.3801, PR-AUC 0.2382 (baseline 0.0807), Brier 0.06810 (baseline 0.07421), ECE 0.00462. At 0.5: precision 0.551, recall 0.020 — expected at an 8% base rate. Run cost 12.0 s, 2.0 GB peak RSS; hold-out untouched. Every later phase is measured against this.
+  - E2 protocol: one run per cumulative feature set, `main` 120 → `plus_installments` 180, with the same folds, seed 42 and LightGBM defaults as E1; run by `python -m src.evaluation.ablation --config configs/experiments/E2_ablation.yaml`. B1 reports per-fold AUC, mean/std, delta vs the previous feature set, and `gain_per_group_auc` = the cumulative delta attributed to the group entering at that feature set (not a leave-one-group-out marginal). The first feature set must reproduce the E1 reference.
+- 26-11-17:
+  - E2 result: AUC 0,75421 (120) → 0,77836 (180), **+0,02414**. Per-group AUC gain: ratios +0,00635, bureau +0,00457, credit_card +0,00393, pos +0,00380, previous +0,00308, installments +0,00243; all 30/30 per-fold step deltas positive, fold std 0,00337 → 0,00178. KS 0,3801 → 0,4187, PR-AUC 0,2382 → 0,2681, Brier 0,06810 → 0,06654; ECE unchanged (~0,004). `main` reproduced E1 exactly; cost 108,6 s total, 2,5 GB peak; hold-out untouched. Artifacts: `reports/tables/B1_ablation.csv`, `reports/E2_report.md`.
+  - RQ1 is answered only for the delivered 180 predictors: no time-window (`WIN_`) or in-fold selection features were delivered, so the report must state that limitation. B1 gain is cumulative-order attribution, not a leave-one-group-out marginal.

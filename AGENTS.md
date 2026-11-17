@@ -1,6 +1,7 @@
 # AGENTS.md
 
-`AGENTS.md` is the authoritative source for project workflow, phases, ownership, implementation responsibilities, coding constraints, and validation requirements.
+`AGENTS.md`(local) is the authoritative source for project workflow, phases, ownership, implementation responsibilities, coding constraints, and validation requirements.
+`AGENTS.md`(global at ~/.config/opencode/AGENTS.md) contains the global rules for agents. **Read this file once at the start of every session**.
 
 `INIT.md` describes the original project objectives, research questions, dataset specifications, methodology, and technical requirements. It provides project context but does not define the execution roadmap.
 
@@ -17,7 +18,7 @@ Read `AGENTS.md` before making changes. Consult `INIT.md` for research and techn
 - `configs/features.yaml` maps group to columns and defines the cumulative ablation sets. It is generated from `reports/tables/feature_catalog.csv` in contract order; regenerate it when the dataset changes, don't hand-edit.
 - `load_split_frame(..., split="val")` raises `PermissionError` unless `allow_holdout=True`. Only `src/evaluation/holdout.py` may pass it.
 - Delivered groups: `application_original` 120, `application` 10, `bureau` 17, `previous` 10, `pos` 6, `credit_card` 8, `installments` 9 = 180. No time-window (`WIN_`) or in-fold selection group was delivered; do not invent them.
-- E1 uses set `main` (the 120 raw application columns). The 10 ratios enter E2 at the second rung of the ladder.
+- E1 uses set `main` (the 120 raw application columns). The 10 ratios enter E2 at the second feature set of the ladder.
 
 ## Notebook data flow
 
@@ -103,9 +104,9 @@ Format: `Phase n - <name> - <PIC>`. Each step names who does it. **Agent** write
 14. **Human:** run notebooks 03 and 04 on Kaggle. Re-attach outputs as a Kaggle dataset and copy `data/processed/datasets/` and `data/splits/` to the local machine.
 15. **Agent:** confirm the delivered contract (`datasets_v1`, 180 predictors, 16 categoricals) loads cleanly through `src/cv/dataset.py`.
 
-### Phase 4 - Feature-group ablation (E2) - Person A (Person B runs it)
+### Phase 4 - Feature-group ablation (E2) - Person A (Person B runs it) [DONE]
 16. **Agent:** regenerate `configs/features.yaml` from `reports/tables/feature_catalog.csv` in contract order. Never hand-edit it.
-17. **Agent:** write the E2 configs for the seven cumulative sets (120, 130, 147, 157, 163, 171, 180). The 10 ratios enter at the second rung. Same folds, same seeds.
+17. **Agent:** write the E2 configs for the seven cumulative sets (120, 130, 147, 157, 163, 171, 180). The 10 ratios enter at the second feature set. Same folds, same seeds.
 18. **Agent:** write the B1 generator: `reports/tables/B1_ablation.csv` with set, n_features, fold AUCs, mean/std, delta vs previous set, and gain per group.
 19. **Human:** run E2 (start with `--sample`, then full; runtime grows with feature count).
 20. **Agent:** review B1. State in the notes that RQ1 is answered without time-window (`WIN_`) features, which were not delivered.

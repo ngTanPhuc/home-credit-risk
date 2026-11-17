@@ -4,7 +4,7 @@ Building a credit risk scoring pipeline on the Kaggle **Home Credit Default Risk
 
 The task is binary classification on seven relational tables. For each applicant in `application_train`, predict `P(TARGET = 1 | x)`, then calibrate the probability and explain the drivers. Positives are roughly 8% of the data.
 
-> **Project status: Phases 0-3 done, E1 baseline logged, Phase 4 (E2 ablation) in progress.** Person A's dataset is frozen (`data/processed/datasets/`, contract `datasets_v1`, 180 predictors), the split protocol is single and fixed, `src/cv` + `src/models` + `src/evaluation/metrics.py` are implemented, and `tests/` passes (28 tests). The notebooks 01..04 build the data; `src/` only models it. `AGENTS.md` defines the workflow, phases and ownership; `INIT.md` holds the research questions, dataset specification and methodology.
+> **Project status: Phases 0-4 done (E1 baseline, E2 ablation logged), Phase 5 (E3 imbalance) next.** Person A's dataset is frozen (`data/processed/datasets/`, contract `datasets_v1`, 180 predictors), the split protocol is single and fixed, `src/cv` + `src/models` + `src/evaluation` are implemented, and `tests/` passes. The notebooks 01..04 build the data; `src/` only models it. `AGENTS.md` defines the workflow, phases and ownership; `INIT.md` holds the research questions, dataset specification and methodology.
 
 ## Scope
 
@@ -134,23 +134,26 @@ Person B's modelling code reads only the frozen dataset and validates it against
 
 ```bash
 # Run an experiment (E1 baseline, E2 ablation, ...)
-uv run python -m src.cv.runner --config configs/experiments/E1_baseline.yaml
+uv run python3 -m src.cv.runner --config configs/experiments/E1_baseline.yaml
 
 # Quick smoke run: 500 development rows across the 5 folds, hold-out untouched
-uv run python -m src.cv.runner --config configs/experiments/E1_baseline.yaml --sample 500
+uv run python3 -m src.cv.runner --config configs/experiments/E1_baseline.yaml --sample 500
+
+# E2 cumulative feature-group ablation: every feature set plus reports/tables/B1_ablation.csv
+uv run python3 -m src.evaluation.ablation --config configs/experiments/E2_ablation.yaml
 
 # Tune (resumable via Optuna SQLite storage)
-uv run python -m src.tuning.optuna_search --config configs/experiments/E4_tuning.yaml
+uv run python3 -m src.tuning.optuna_search --config configs/experiments/E4_tuning.yaml
 
 # Final hold-out evaluation — run ONCE, deliberately
-uv run python -m src.evaluation.holdout --config configs/experiments/E5_models.yaml --confirm-final
+uv run python3 -m src.evaluation.holdout --config configs/experiments/E5_models.yaml --confirm-final
 
 # Explanation
-uv run python -m src.explain.shap_analysis --config configs/experiments/E7_explain.yaml
-uv run python -m src.explain.agreement --config configs/experiments/E7_explain.yaml
+uv run python3 -m src.explain.shap_analysis --config configs/experiments/E7_explain.yaml
+uv run python3 -m src.explain.agreement --config configs/experiments/E7_explain.yaml
 ```
 
-Only the `src.cv.runner` commands work today; the others land with their phases.
+Only the `src.cv.runner` and `src.evaluation.ablation` commands work today; the others land with their phases.
 
 ## Repository layout
 

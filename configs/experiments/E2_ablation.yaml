@@ -1,0 +1,39 @@
+# E2: cumulative feature-group ablation (RQ1).
+# One run per cumulative feature set from configs/features.yaml; `main` (120 columns)
+# reproduces E1 on the same folds and seed, so B1 is checked against the E1 reference.
+# src/evaluation/ablation.py sets `features.use_set` and `variant` per feature set.
+
+extends:
+  - ../base.yaml
+  - ../features.yaml
+  - ../models/lightgbm.yaml
+
+experiment: E2_ablation
+variant: main
+data_version: datasets_v1
+
+features:
+  use_set: main  # replaced per feature set by the ablation runner
+
+ablation:
+  # Cumulative order. Every feature set adds the groups named after the previous one.
+  sets:
+    - main
+    - main_plus_ratios
+    - plus_bureau
+    - plus_previous
+    - plus_pos
+    - plus_credit_card
+    - plus_installments
+  table: reports/tables/B1_ablation.csv
+
+outputs:
+  exp: E2_26-11-17_exp01
+  folds_csv: reports/tables/{exp}/E2_{variant}_cv_folds_seed{seed}.csv
+  summary_csv: reports/tables/{exp}/E2_{variant}_cv_summary_seed{seed}.csv
+  importance_csv: reports/tables/{exp}/E2_{variant}_feature_importance_seed{seed}.csv
+  oof: reports/predictions/{exp}/E2_{variant}_lgbm_seed{seed}_oof.parquet
+  run_json: reports/runs/{exp}/E2_{variant}_lgbm_seed{seed}.json
+
+mlflow:
+  experiment: E2_ablation

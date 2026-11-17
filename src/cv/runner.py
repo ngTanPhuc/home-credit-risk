@@ -361,21 +361,23 @@ def _summarize_folds(fold_metrics: pd.DataFrame) -> dict[str, float]:
     return summary
 
 
-def _render_output_path(
+def render_output_path(
     config: Mapping[str, Any],
     key: str,
     *,
     seed: int,
     sample: int | None,
 ) -> Path:
+    """Render one ``outputs.<key>`` template for a seed, experiment and variant."""
     path = resolve_path(config, f"outputs.{key}")
-    
+
     # 1. Get the experiment name from the YAML config
     exp_name = get_nested(config, "outputs.exp", "default_exp")
-    
-    # 2. Pass BOTH seed and exp to the format function
-    rendered = Path(str(path).format(seed=seed, exp=exp_name))
-    
+    variant = get_nested(config, "variant", "default")
+
+    # 2. Pass seed, experiment and variant to the format function
+    rendered = Path(str(path).format(seed=seed, exp=exp_name, variant=variant))
+
     if sample is not None:
         rendered = rendered.with_name(f"{rendered.stem}_sample{sample}{rendered.suffix}")
     return rendered
@@ -422,10 +424,10 @@ def _save_outputs(
     elapsed_seconds: float,
 ) -> dict[str, Path]:
     paths = {
-        "folds": _render_output_path(config, "folds_csv", seed=seed, sample=sample),
-        "summary": _render_output_path(config, "summary_csv", seed=seed, sample=sample),
-        "oof": _render_output_path(config, "oof", seed=seed, sample=sample),
-        "run_json": _render_output_path(config, "run_json", seed=seed, sample=sample),
+        "folds": render_output_path(config, "folds_csv", seed=seed, sample=sample),
+        "summary": render_output_path(config, "summary_csv", seed=seed, sample=sample),
+        "oof": render_output_path(config, "oof", seed=seed, sample=sample),
+        "run_json": render_output_path(config, "run_json", seed=seed, sample=sample),
     }
     for path in paths.values():
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -435,7 +437,7 @@ def _save_outputs(
     result.oof.to_parquet(paths["oof"], index=False, engine="pyarrow")
 
     if result.feature_importance is not None:
-        importance_path = _render_output_path(config, "importance_csv", seed=seed, sample=sample)
+        importance_path = render_output_path(config, "importance_csv", seed=seed, sample=sample)
         importance_path.parent.mkdir(parents=True, exist_ok=True)
         result.feature_importance.to_csv(importance_path, index=False)
         paths["importance"] = importance_path
@@ -570,10 +572,10 @@ def run_from_config(
     for seed in seeds:
         set_seeds(seed)
         expected_outputs = [
-            _render_output_path(config, "summary_csv", seed=seed, sample=sample),
-            _render_output_path(config, "folds_csv", seed=seed, sample=sample),
-            _render_output_path(config, "oof", seed=seed, sample=sample),
-            _render_output_path(config, "run_json", seed=seed, sample=sample),
+            render_output_path(config, "summary_csv", seed=seed, sample=sample),
+            render_output_path(config, "folds_csv", seed=seed, sample=sample),
+            render_output_path(config, "oof", seed=seed, sample=sample),
+            render_output_path(config, "run_json", seed=seed, sample=sample),
         ]
         if all(path.exists() for path in expected_outputs) and not force:
             LOGGER.info(
