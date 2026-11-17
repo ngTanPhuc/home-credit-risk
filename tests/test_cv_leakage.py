@@ -17,21 +17,24 @@ class RecordingModel(BaseModel):
 
     name = "recording"
     calls: list[dict] = []
+    predict_calls: list[dict] = []
 
     def __init__(self, seed: int = 42) -> None:
         self.seed = seed
 
-    def fit(self, features, target, *, categorical_features=None):
+    def fit(self, features, target, *, categorical_features=None, sample_weight=None):
         RecordingModel.calls.append(
             {
                 "probe": set(features["PROBE_ROW"].tolist()),
                 "n_rows": len(features),
                 "n_positive": int(np.asarray(target).sum()),
+                "weighted": sample_weight is not None,
             }
         )
         return self
 
     def predict_proba(self, features):
+        RecordingModel.predict_calls.append({"probe": set(features["PROBE_ROW"].tolist())})
         return np.full(len(features), 0.5, dtype="float64")
 
 
@@ -41,6 +44,7 @@ def development(synthetic_dataset):
     frame = frame.loc[:, [ID_COL, TARGET_COL, "fold", *PREDICTORS]].copy()
     frame["PROBE_ROW"] = np.arange(len(frame))
     RecordingModel.calls = []
+    RecordingModel.predict_calls = []
     return frame
 
 
@@ -104,3 +108,43 @@ def test_lgbm_rejects_single_class_fold(development):
     target = pd.Series(np.zeros(len(development), dtype="int8"))
     with pytest.raises(ValueError, match="both classes"):
         LGBMModel(params={"n_estimators": 5}).fit(features, target)
+
+
+@pytest.mark.parametrize("variant", ["class_weight", "undersample", "smotenc"])
+def test_resampling_never_touches_validation_rows(development, variant):
+    result = run_cv(
+        development,
+        id_col=ID_COL,
+        target_col=TARGET_COL,
+        model_factory=lambda seed: RecordingModel(seed),
+        seed=42,
+        n_folds=3,
+        categorical_features=["NAME_CONTRACT_TYPE"],
+        metrics_config={"ece_bins": 5, "thresholds": []},
+        imbalance={"name": variant, "sampling_strategy": 0.5},
+    )
+
+    fold_of_row = development.set_index("PROBE_ROW")["fold"].to_dict()
+    assert len(RecordingModel.calls) == 3
+    assert len(RecordingModel.predict_calls) == 3
+
+    for fold_id, call in enumerate(RecordingModel.predict_calls):
+        expected_valid = {row for row, fold in fold_of_row.items() if fold == fold_id}
+        assert call["probe"] == expected_valid
+
+    for fold_id, call in enumerate(RecordingModel.calls):
+        expected_train = {row for row, fold in fold_of_row.items() if fold != fold_id}
+        if variant == "class_weight":
+            assert call["probe"] == expected_train
+            assert call["weighted"] is True
+        elif variant == "undersample":
+            assert call["probe"] <= expected_train
+            assert call["n_rows"] <= len(expected_train)
+            assert call["weighted"] is False
+        else:
+            assert call["n_rows"] >= len(expected_train)
+            assert call["weighted"] is False
+
+    assert len(result.oof) == len(development)
+    assert set(result.oof[ID_COL]) == set(development[ID_COL])
+    assert result.oof[ID_COL].is_unique
