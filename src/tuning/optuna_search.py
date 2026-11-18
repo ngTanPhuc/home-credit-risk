@@ -64,7 +64,7 @@ from src.utils.memory import peak_rss_mb
 
 LOGGER = logging.getLogger(__name__)
 
-optuna.logging.set_verbosity(optuna.logging.WARNING)
+optuna.logging.set_verbosity(optuna.logging.INFO)
 
 
 def _single_seed(config: Mapping[str, Any]) -> int:
@@ -167,6 +167,7 @@ def _objective(
     }
     trial_model = {**dict(model_block), "params": params}
     trial_model.pop("tuning", None)
+    LOGGER.info("E4 %s trial=%d params=%s", model_name, trial.number, sampled)
 
     fold_aucs: list[float] = []
     best_iterations: list[int | None] = []
@@ -192,11 +193,29 @@ def _objective(
             early_stopping_rounds=early_stopping_rounds,
         )
         probabilities = model.predict_proba(features.loc[valid_mask])
-        fold_aucs.append(float(roc_auc_score(target[valid_mask], probabilities)))
+        fold_auc = float(roc_auc_score(target[valid_mask], probabilities))
+        fold_aucs.append(fold_auc)
         best_iterations.append(model.best_iteration)
+        LOGGER.info(
+            "E4 %s trial=%d fold=%d: AUC=%.5f best_iter=%s mean=%.5f (valid=%d)",
+            model_name,
+            trial.number,
+            fold_id,
+            fold_auc,
+            model.best_iteration,
+            float(np.mean(fold_aucs)),
+            int(valid_mask.sum()),
+        )
 
         trial.report(float(np.mean(fold_aucs)), fold_id)
         if trial.should_prune():
+            LOGGER.info(
+                "E4 %s trial=%d pruned after fold=%d (mean=%.5f)",
+                model_name,
+                trial.number,
+                fold_id,
+                float(np.mean(fold_aucs)),
+            )
             trial.set_user_attr("fold_aucs", fold_aucs)
             trial.set_user_attr("best_iterations", best_iterations)
             raise optuna.TrialPruned()
