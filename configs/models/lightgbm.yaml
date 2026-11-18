@@ -2,6 +2,9 @@
 # E1 uses strict LightGBM defaults: `params` is intentionally empty and no early
 # stopping is used. The `runtime` block only controls reproducibility and resource
 # use, not tuned hyperparameters.
+# E4 (`src/tuning/optuna_search.py`) adds `tuning.base_params` to the model params
+# and samples `tuning.search_space`; `params` stays untouched so E1/E2/E3 remain
+# comparable.
 
 model:
   name: lightgbm
@@ -10,3 +13,40 @@ model:
     n_jobs: -1
     deterministic: true
     force_col_wise: true
+  tuning:
+    early_stopping_rounds: 100
+    base_params:
+      n_estimators: 2000
+    search_space:
+      num_leaves:
+        type: int
+        low: 15
+        high: 255
+        log: true
+      learning_rate:
+        type: float
+        low: 0.01
+        high: 0.3
+        log: true
+      min_child_samples:
+        type: int
+        low: 5
+        high: 100
+      subsample:
+        type: float
+        low: 0.6
+        high: 1.0
+      colsample_bytree:
+        type: float
+        low: 0.6
+        high: 1.0
+      reg_alpha:
+        type: float
+        low: 1.0e-8
+        high: 10.0
+        log: true
+      reg_lambda:
+        type: float
+        low: 1.0e-8
+        high: 10.0
+        log: true

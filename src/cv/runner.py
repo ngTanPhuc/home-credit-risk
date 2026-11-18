@@ -405,29 +405,19 @@ def _model_factory(config: Mapping[str, Any], *, seed: int) -> BaseModel:
     model_config = get_nested(config, "model")
     if not isinstance(model_config, Mapping):
         raise TypeError("model must be a mapping")
-    model_name = str(model_config.get("name", "lightgbm")).lower()
-    if model_name != "lightgbm":
-        raise ValueError(f"Unsupported model for Phase 2: {model_name!r}")
 
-    from src.models.lgbm import LGBMModel
+    from src.models import build_model
 
-    runtime = dict(model_config.get("runtime") or {})
-    params = dict(model_config.get("params") or {})
-    return LGBMModel(
-        params=params,
-        seed=seed,
-        n_jobs=int(runtime.get("n_jobs", -1)),
-        deterministic=bool(runtime.get("deterministic", True)),
-        force_col_wise=bool(runtime.get("force_col_wise", True)),
-    )
+    return build_model(model_config, seed=seed)
 
 
 def _model_params(config: Mapping[str, Any], *, seed: int) -> dict[str, Any]:
     model_config = get_nested(config, "model")
-    params = dict(model_config.get("params") or {})
-    runtime = dict(model_config.get("runtime") or {})
-    flat: dict[str, Any] = {"seed": seed, "model.name": model_config.get("name")}
-    for key, value in {**runtime, **params}.items():
+    flat: dict[str, Any] = {"seed": seed}
+    for key, value in model_config.items():
+        if key == "name":
+            flat["model.name"] = value
+            continue
         flat[f"model.{key}"] = value
     return flat
 

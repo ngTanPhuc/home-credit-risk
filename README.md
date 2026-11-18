@@ -4,7 +4,7 @@ Building a credit risk scoring pipeline on the Kaggle **Home Credit Default Risk
 
 The task is binary classification on seven relational tables. For each applicant in `application_train`, predict `P(TARGET = 1 | x)`, then calibrate the probability and explain the drivers. Positives are roughly 8% of the data.
 
-> **Project status: Phases 0-5 done (E1 baseline, E2 ablation, E3 imbalance logged), Phase 6 (E4 tuning) next.** Person A's dataset is frozen (`data/processed/datasets/`, contract `datasets_v1`, 180 predictors), the split protocol is single and fixed, `src/cv` + `src/models` + `src/evaluation` are implemented, and `tests/` passes. The notebooks 01..04 build the data; `src/` only models it. `AGENTS.md` defines the workflow, phases and ownership; `INIT.md` holds the research questions, dataset specification and methodology.
+> **Project status: Phases 0-5 done (E1 baseline, E2 ablation, E3 imbalance logged), Phase 6 (E4 tuning) implemented, waiting for the Kaggle run.** Person A's dataset is frozen (`data/processed/datasets/`, contract `datasets_v1`, 180 predictors), the split protocol is single and fixed, `src/cv` + `src/models` + `src/evaluation` are implemented, and `tests/` passes. The notebooks 01..04 build the data; `src/` only models it. `AGENTS.md` defines the workflow, phases and ownership; `INIT.md` holds the research questions, dataset specification and methodology.
 
 ## Scope
 
@@ -145,7 +145,7 @@ uv run python3 -m src.evaluation.ablation --config configs/experiments/E2_ablati
 # E3 imbalance handling: four variants on the same folds plus reports/tables/E3_imbalance_comparison.csv
 uv run python3 -m src.evaluation.imbalance_comparison --config configs/experiments/E3_imbalance.yaml
 
-# Tune (resumable via Optuna SQLite storage)
+# Tune E4 (resumable via Optuna SQLite storage); --trials N and --models a,b restrict the run
 uv run python3 -m src.tuning.optuna_search --config configs/experiments/E4_tuning.yaml
 
 # Final hold-out evaluation — run ONCE, deliberately
@@ -156,7 +156,7 @@ uv run python3 -m src.explain.shap_analysis --config configs/experiments/E7_expl
 uv run python3 -m src.explain.agreement --config configs/experiments/E7_explain.yaml
 ```
 
-Only the `src.cv.runner`, `src.evaluation.ablation` and `src.evaluation.imbalance_comparison` commands work today; the others land with their phases.
+Working commands: `src.cv.runner` (E1), `src.evaluation.ablation` (E2), `src.evaluation.imbalance_comparison` (E3) and `src.tuning.optuna_search` (E4). The hold-out, calibration and explanation commands land with their phases.
 
 ## Repository layout
 
@@ -197,7 +197,7 @@ reports/figures/      ROC/PR, tuning history, reliability, SHAP plots
 |---|---|---|
 | E1 | LightGBM baseline (optional LR), main table only | Reference point |
 | E2 | Cumulative feature-group ablation | RQ1 |
-| E3 | Imbalance handling: none, class weight, undersampling, SMOTENC (in-fold) | RQ3 |
+| E3 | Imbalance handling: none, class weight, undersampling, SMOTE (in-fold) | RQ3 |
 | E4 | Tuning: default vs Optuna TPE | RQ3 |
 | E5 | Model comparison on the full tuned feature set | RQ2 |
 | E6 | Calibration: none vs Platt vs isotonic | RQ2 |
@@ -221,6 +221,7 @@ Kaggle sessions are time- and memory-limited (16 GB RAM ceiling):
 
 - `reports/tables/B1_ablation.csv`, `B2_model_comparison.csv`, `B3_calibration.csv`, `B4_delong_pairs.csv`
 - `reports/tables/E3_imbalance_comparison.csv` and per-variant fold/summary/importance CSVs under `reports/tables/E3_<run>/`
+- E4: `reports/tables/E4_tuning_comparison.csv`, `reports/tables/E4_tuning_history.csv`, best parameters (with the fixed iteration count for E5) in `reports/runs/E4_<run>/E4_best_params.json`, and the AUC-vs-trial figure `reports/figures/E4_optuna_history.png`
 - Per-experiment reports: `reports/E1_report.md`, `reports/E2_report.md`, `reports/E3_report.md`
 - `reports/figures/`: ROC/PR curves, Optuna history, reliability diagrams, SHAP summary/dependence/waterfall, importance-agreement heatmap
 - `mlruns/`: local MLflow tracking (gitignored)

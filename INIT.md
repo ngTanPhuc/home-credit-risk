@@ -135,7 +135,7 @@ When unsure, stop and ask. Prefer a short question over a large wrong change.
 │   │   ├── base.py          # common fit/predict_proba/save interface
 │   │   ├── lgbm.py
 │   │   ├── xgb.py
-│   │   ├── catboost_model.py
+│   │   ├── catboost.py
 │   │   └── ensemble.py      # weighted average and stacking
 │   ├── imbalance.py         # class weight, undersampling, SMOTE (in-fold)
 │   ├── tuning/

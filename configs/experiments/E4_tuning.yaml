@@ -1,0 +1,52 @@
+# E4: tuning, default vs Optuna TPE (RQ3).
+# One study per model on the E2 winner feature set, the E3 `class_weight` variant,
+# seed 42 and the same frozen folds. src/tuning/optuna_search.py first reruns each
+# model with its default `params` (the default-vs-tuned reference), then tunes.
+# Early stopping watches the fold's validation rows; the saved `fixed_iterations`
+# value in E4_best_params.json lets E5 refit without early stopping.
+
+extends:
+  - ../base.yaml
+  - ../features.yaml
+
+experiment: E4_tuning
+variant: tuned
+data_version: datasets_v1
+
+features:
+  use_set: plus_installments
+
+imbalance:
+  strategy: class_weight  # E3 decision for E4-E7
+
+tuning:
+  models:
+    lightgbm: configs/models/lightgbm.yaml
+    xgboost: configs/models/xgboost.yaml
+    catboost: configs/models/catboost.yaml
+  # Total trial budget per model; a resumed study runs only the missing trials.
+  n_trials: 40
+  timeout_seconds: null
+  compare_defaults: true
+  sampler_seed: 42
+  pruner:
+    # Do not prune during the first folds of the first trials; start with enough
+    # completed trials to make the median meaningful.
+    n_startup_trials: 10
+    n_warmup_steps: 1
+  storage: reports/runs/{exp}/E4_optuna.db
+  table: reports/tables/E4_tuning_comparison.csv
+  history_csv: reports/tables/E4_tuning_history.csv
+  best_params: reports/runs/{exp}/E4_best_params.json
+  figure: reports/figures/E4_optuna_history.png
+
+outputs:
+  exp: E4_26-11-18_exp01
+  folds_csv: reports/tables/{exp}/E4_{variant}_cv_folds_seed{seed}.csv
+  summary_csv: reports/tables/{exp}/E4_{variant}_cv_summary_seed{seed}.csv
+  importance_csv: reports/tables/{exp}/E4_{variant}_feature_importance_seed{seed}.csv
+  oof: reports/predictions/{exp}/E4_{variant}_seed{seed}_oof.parquet
+  run_json: reports/runs/{exp}/E4_{variant}_seed{seed}.json
+
+mlflow:
+  experiment: E4_tuning

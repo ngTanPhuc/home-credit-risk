@@ -13,7 +13,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from lightgbm import LGBMClassifier
+from lightgbm import LGBMClassifier, early_stopping
 
 from src.models.base import BaseModel
 
@@ -58,6 +58,8 @@ class LGBMModel(BaseModel):
         *,
         categorical_features: Sequence[str] | None = None,
         sample_weight: np.ndarray | Sequence[float] | None = None,
+        validation: tuple[pd.DataFrame, pd.Series | np.ndarray] | None = None,
+        early_stopping_rounds: int | None = None,
     ) -> LGBMModel:
         """Fit on training-fold rows.
 
@@ -72,6 +74,10 @@ class LGBMModel(BaseModel):
             columns are detected automatically.
         sample_weight:
             Optional per-row weights aligned with ``target``.
+        validation:
+            Optional same-fold validation pair used for early stopping (E4).
+        early_stopping_rounds:
+            Required with ``validation``; rounds without improvement.
 
         Notes
         -----
@@ -105,7 +111,27 @@ class LGBMModel(BaseModel):
                 raise ValueError("sample_weight must be finite and non-negative")
 
         self._model = LGBMClassifier(**self.params)
-        self._model.fit(frame, labels, sample_weight=weights)
+        eval_X = None
+        eval_y = None
+        callbacks = None
+        if validation is not None:
+            if early_stopping_rounds is None:
+                raise ValueError("validation requires early_stopping_rounds")
+            valid_features, valid_target = validation
+            valid_frame = valid_features.loc[:, self._feature_names].copy()
+            valid_frame = self._encode_categories(valid_frame, fit=False)
+            eval_X = valid_frame
+            eval_y = np.asarray(valid_target).reshape(-1)
+            callbacks = [early_stopping(int(early_stopping_rounds), verbose=False)]
+
+        self._model.fit(
+            frame,
+            labels,
+            sample_weight=weights,
+            eval_X=eval_X,
+            eval_y=eval_y,
+            callbacks=callbacks,
+        )
         return self
 
     def predict_proba(self, features: pd.DataFrame) -> np.ndarray:
@@ -131,6 +157,14 @@ class LGBMModel(BaseModel):
             .astype("float64")
             .sort_values(ascending=False)
         )
+
+    @property
+    def best_iteration(self) -> int | None:
+        """Iteration chosen by the early-stopping callback, if any."""
+        if self._model is None:
+            return None
+        best = getattr(self._model, "best_iteration_", None)
+        return int(best) if best else None
 
     @staticmethod
     def _resolve_categorical_features(

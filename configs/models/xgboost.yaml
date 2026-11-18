@@ -1,0 +1,54 @@
+# XGBoost model configuration.
+# `params` are the default run parameters. Categorical columns are target-encoded
+# inside each training fold by src/models/xgb.py (`target_encoding`), never by
+# XGBoost's native categorical support.
+# E4 adds `tuning.base_params` and samples `tuning.search_space`.
+
+model:
+  name: xgboost
+  params:
+    n_estimators: 300
+    max_depth: 6
+    learning_rate: 0.1
+  runtime:
+    n_jobs: -1
+  target_encoding:
+    n_splits: 5
+    smoothing: 10.0
+  tuning:
+    early_stopping_rounds: 100
+    base_params:
+      n_estimators: 2000
+    search_space:
+      max_depth:
+        type: int
+        low: 3
+        high: 10
+      learning_rate:
+        type: float
+        low: 0.01
+        high: 0.3
+        log: true
+      min_child_weight:
+        type: float
+        low: 1.0
+        high: 50.0
+        log: true
+      subsample:
+        type: float
+        low: 0.6
+        high: 1.0
+      colsample_bytree:
+        type: float
+        low: 0.6
+        high: 1.0
+      reg_alpha:
+        type: float
+        low: 1.0e-8
+        high: 10.0
+        log: true
+      reg_lambda:
+        type: float
+        low: 1.0e-8
+        high: 10.0
+        log: true

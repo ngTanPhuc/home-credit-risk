@@ -1,8 +1,9 @@
 """Common model interface used by the CV runner.
 
-Models must be pure estimators: no target encoding, resampling, or feature
-selection belongs here. Those label-dependent steps are fitted inside each
-training fold by dedicated fit/transform objects.
+Models must be pure estimators: resampling and feature selection belong to
+dedicated fit/transform objects. A model may encode its own categorical columns
+inside :meth:`BaseModel.fit` (XGBoost target encoding), because ``fit`` only
+receives the rows of one training fold.
 """
 
 from __future__ import annotations
@@ -27,11 +28,18 @@ class BaseModel(ABC):
         *,
         categorical_features: Sequence[str] | None = None,
         sample_weight: np.ndarray | Sequence[float] | None = None,
+        validation: tuple[pd.DataFrame, pd.Series | np.ndarray] | None = None,
+        early_stopping_rounds: int | None = None,
     ) -> BaseModel:
         """Fit the model on training-fold rows and return ``self``.
 
         ``sample_weight`` is aligned with ``target`` and is ``None`` when the
         imbalance variant does not weight rows.
+
+        ``validation`` is an optional ``(features, target)`` pair from the same
+        fold, used by E4 early stopping. It is never used to fit the model. The
+        CV runner leaves it ``None``, so final E5/E6 runs use a fixed iteration
+        count instead of selecting one on the validation fold.
         """
 
     @abstractmethod
@@ -41,3 +49,8 @@ class BaseModel(ABC):
     def feature_importance(self) -> pd.Series:
         """Return feature importances indexed by feature name, or an empty Series."""
         return pd.Series(dtype="float64", name="importance")
+
+    @property
+    def best_iteration(self) -> int | None:
+        """Early-stopping iteration selected in :meth:`fit`, or ``None``."""
+        return None
