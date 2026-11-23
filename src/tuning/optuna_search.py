@@ -301,17 +301,24 @@ def tune_model(
     return study
 
 
+# Rounds to add to a library's reported best iteration to get the number of trees
+# to keep. LightGBM's ``best_iteration_`` already counts the trees kept (1-based);
+# XGBoost's ``best_iteration`` and CatBoost's ``get_best_iteration()`` are zero-based.
+_ITERATION_OFFSET = {"lightgbm": 0, "xgboost": 1, "catboost": 1}
+
+
 def best_payload(study: optuna.Study, model_name: str, model_block: Mapping[str, Any]) -> dict:
     """Summarize the best trial, including a fixed iteration count for E5."""
     best = study.best_trial
     best_iterations = list(best.user_attrs.get("best_iterations", []))
     usable = [int(value) for value in best_iterations if value is not None]
     base_params = dict(model_block["tuning"].get("base_params") or {})
-    iterations_parameter = (
-        "iterations" if str(model_block.get("name", "")).lower() == "catboost" else "n_estimators"
-    )
+    capability = str(model_block.get("name", model_name)).strip().lower()
+    if capability not in _ITERATION_OFFSET:
+        raise ValueError(f"No iteration offset known for model {capability!r}")
+    iterations_parameter = "iterations" if capability == "catboost" else "n_estimators"
     if usable:
-        fixed_iterations = int(np.median(usable)) + 1
+        fixed_iterations = int(np.median(usable)) + _ITERATION_OFFSET[capability]
     else:
         # No early stop fired: the full tuning budget was used in every fold.
         fixed_iterations = base_params.get(iterations_parameter)

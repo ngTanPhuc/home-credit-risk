@@ -4,7 +4,7 @@ Building a credit risk scoring pipeline on the Kaggle **Home Credit Default Risk
 
 The task is binary classification on seven relational tables. For each applicant in `application_train`, predict `P(TARGET = 1 | x)`, then calibrate the probability and explain the drivers. Positives are roughly 8% of the data.
 
-> **Project status: Phases 0-5 done (E1 baseline, E2 ablation, E3 imbalance logged), Phase 6 (E4 tuning) implemented, waiting for the Kaggle run.** Person A's dataset is frozen (`data/processed/datasets/`, contract `datasets_v1`, 180 predictors), the split protocol is single and fixed, `src/cv` + `src/models` + `src/evaluation` are implemented, and `tests/` passes. The notebooks 01..04 build the data; `src/` only models it. `AGENTS.md` defines the workflow, phases and ownership; `INIT.md` holds the research questions, dataset specification and methodology.
+> **Project status: Phases 0-6 done (E1 baseline, E2 ablation, E3 imbalance, E4 tuning logged), Phase 7 (E5 model comparison and ensemble) next.** Person A's dataset is frozen (`data/processed/datasets/`, contract `datasets_v1`, 180 predictors), the split protocol is single and fixed, `src/cv` + `src/models` + `src/evaluation` + `src/tuning` are implemented, and `tests/` passes. The notebooks 01..04 build the data; `src/` only models it. `AGENTS.md` defines the workflow, phases and ownership; `INIT.md` holds the research questions, dataset specification and methodology.
 
 ## Scope
 
@@ -206,6 +206,8 @@ reports/figures/      ROC/PR, tuning history, reliability, SHAP plots
 One MLflow experiment per ID (`E1_baseline`, ...). Run name format: `<model>_<variant>_seed<k>`. Log the resolved config, feature count, fold AUCs, mean/std, artifact paths, timing, peak memory, and git commit.
 
 E3 is done: AUC 0.77836 (`none`), 0.77920 (`class_weight`), 0.77753 (`undersample`), 0.69120 (`smotenc`) on `plus_installments`. `class_weight` is the chosen variant for E4-E7, but its ECE 0.29946 (vs 0.00434 for `none`) makes E6 calibration mandatory before any probability is reported. See `reports/E3_report.md`.
+
+E4 is done: 40 Optuna TPE trials per model on `plus_installments` with `class_weight` moved default → tuned AUC from 0.77920 → 0.78424 (LightGBM), 0.77528 → 0.78717 (XGBoost) and 0.78259 → 0.78607 (CatBoost); tuned fold std is ~0.0013 and no trial failed. The LightGBM default run reproduces the E3 `class_weight` AUC exactly, so the harness replays the E1-E3 protocol. Two caveats: the best-so-far curve is flat from trial ~4, so 40 trials was more than needed, and the winners learn slowly enough that the 2000-round budget binds, so the tuned AUC is if anything slightly under-fitted. Tuned parameters with a fixed iteration count (`fixed_iterations` / `final_params`) are saved for E5 in `reports/runs/E4_26-11-18_exp01/E4_best_params.json`. See `DECISIONS.md`.
 
 ## Kaggle workflow
 
