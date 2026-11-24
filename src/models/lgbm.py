@@ -158,6 +158,19 @@ class LGBMModel(BaseModel):
             .sort_values(ascending=False)
         )
 
+    def shap_contributions(self, features: pd.DataFrame) -> pd.DataFrame:
+        """Return positive-class TreeSHAP contributions on the encoded frame."""
+        if self._model is None:
+            raise RuntimeError("Model must be fitted before shap_contributions")
+        frame = self._encode_categories(features.loc[:, self._feature_names].copy(), fit=False)
+        values = self._model.booster_.predict(frame, pred_contrib=True)
+        # LightGBM appends the expected value (bias) as the last column.
+        return pd.DataFrame(
+            np.asarray(values, dtype="float64")[:, : len(self._feature_names)],
+            index=features.index,
+            columns=self._feature_names,
+        )
+
     @property
     def best_iteration(self) -> int | None:
         """Iteration chosen by the early-stopping callback, if any."""

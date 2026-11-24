@@ -50,6 +50,16 @@ class BaseModel(ABC):
         """Return feature importances indexed by feature name, or an empty Series."""
         return pd.Series(dtype="float64", name="importance")
 
+    def shap_contributions(self, features: pd.DataFrame) -> pd.DataFrame:
+        """Return positive-class TreeSHAP contributions, one column per input feature.
+
+        Rows keep ``features.index``. The values are additive log-odds
+        contributions from each library's own exact TreeSHAP implementation;
+        the base value (expected log-odds) is not included. Backends that do not
+        implement this raise :class:`NotImplementedError`.
+        """
+        raise NotImplementedError(f"{type(self).__name__} does not implement SHAP contributions")
+
     @property
     def best_iteration(self) -> int | None:
         """Early-stopping iteration selected in :meth:`fit`, or ``None``."""

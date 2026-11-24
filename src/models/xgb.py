@@ -140,6 +140,21 @@ class XGBModel(BaseModel):
             .sort_values(ascending=False)
         )
 
+    def shap_contributions(self, features: pd.DataFrame) -> pd.DataFrame:
+        """Return positive-class TreeSHAP contributions on the target-encoded frame."""
+        if self._model is None:
+            raise RuntimeError("Model must be fitted before shap_contributions")
+        from xgboost import DMatrix
+
+        encoded = self._transform(features)
+        values = self._model.get_booster().predict(DMatrix(encoded), pred_contribs=True)
+        # XGBoost appends the expected value (bias) as the last column.
+        return pd.DataFrame(
+            np.asarray(values, dtype="float64")[:, : len(self._feature_names)],
+            index=features.index,
+            columns=self._feature_names,
+        )
+
     @property
     def best_iteration(self) -> int | None:
         """Zero-based best iteration chosen by early stopping, if any."""

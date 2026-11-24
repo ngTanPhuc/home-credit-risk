@@ -149,7 +149,7 @@ def _record_path(config: Mapping[str, Any], *, sample: int | None) -> Path:
     return _with_sample(Path(rendered), sample)
 
 
-def _load_seed_oof(
+def load_seed_oof(
     config: Mapping[str, Any],
     model_names: Sequence[str],
     *,
@@ -362,7 +362,7 @@ def write_outputs(
     figure_inputs: tuple[OOFMatrix, dict[str, _Arm], int] | None = None
 
     for seed in seeds:
-        matrix = _load_seed_oof(
+        matrix = load_seed_oof(
             config,
             model_names,
             seed=int(seed),

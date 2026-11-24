@@ -16,7 +16,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from catboost import CatBoostClassifier
+from catboost import CatBoostClassifier, Pool
 
 from src.models.base import BaseModel
 
@@ -127,6 +127,20 @@ class CatBoostModel(BaseModel):
             pd.Series(values, index=self._feature_names, name="importance")
             .astype("float64")
             .sort_values(ascending=False)
+        )
+
+    def shap_contributions(self, features: pd.DataFrame) -> pd.DataFrame:
+        """Return positive-class TreeSHAP contributions with native categoricals."""
+        if self._model is None:
+            raise RuntimeError("Model must be fitted before shap_contributions")
+        frame = self._transform(features)
+        pool = Pool(frame, cat_features=list(self._categorical_features), label=None)
+        values = self._model.get_feature_importance(pool, type="ShapValues")
+        # CatBoost appends the expected value (bias) as the last column.
+        return pd.DataFrame(
+            np.asarray(values, dtype="float64")[:, : len(self._feature_names)],
+            index=features.index,
+            columns=self._feature_names,
         )
 
     @property

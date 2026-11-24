@@ -1,0 +1,68 @@
+# E6: probability calibration (RQ2's calibration half).
+# Reuses the E5 OOF predictions (no model is refitted): every arm is recalibrated
+# with a calibrator fitted on the other folds' OOF rows, so Brier/ECE before vs
+# after are out-of-sample. src/evaluation/calibration_eval.py writes
+# reports/tables/E6_calibration.csv, the fold-level table, the reliability figure
+# and the run record with the recommended calibrator per arm.
+#
+# The `final` block is the Phase 9 choice. Freeze it after reviewing E6 and
+# record the decision in DECISIONS.md; src/evaluation/holdout.py refuses to run
+# until --confirm-final is passed, and only once.
+
+extends:
+  - ../base.yaml
+  - ../features.yaml
+
+experiment: E6_calibration
+variant: tuned
+data_version: datasets_v1
+
+features:
+  use_set: plus_installments
+
+imbalance:
+  strategy: class_weight
+
+seeds:
+  split: 42
+  model: [42, 43, 44]
+
+comparison:
+  models:
+    lightgbm: configs/models/lightgbm.yaml
+    xgboost: configs/models/xgboost.yaml
+    catboost: configs/models/catboost.yaml
+  # Same E4 output E5 refitted from; E6 only reads OOF files, never params.
+  best_params: reports/runs/E4_26-11-18_exp01/E4_best_params.json
+  ensembles: [weighted_average, stacking]
+  weight_step: 0.05
+
+calibration:
+  calibrators: [none, platt, isotonic]
+  # Refuse a calibrator fitted on fewer development rows than this.
+  min_rows: 2000
+  table: reports/tables/E6_calibration.csv
+  fold_table: reports/tables/E6_calibration_folds.csv
+  figure: reports/figures/E6_reliability.png
+  record: reports/runs/{exp}/E6_calibration.json
+
+final:
+  # The single model/calibrator pair Phase 9 evaluates on the hold-out.
+  # E5 evidence favours the cross-fitted stack, which is also the best-calibrated
+  # arm before E6 (Brier 0,06607 / ECE 0,00561). Replace after reading E6.
+  arm: stacking
+  calibrator: platt
+  # Model seed the final fit uses; must be one of seeds.model.
+  seed: 42
+
+outputs:
+  exp: E6_26-11-24_exp01
+  # Per-seed fold metrics of the E5 refit, read-only inputs for this step.
+  folds_csv: reports/tables/E5_26-11-24_exp01/E5_{variant}_cv_folds_seed{seed}.csv
+  summary_csv: reports/tables/E5_26-11-24_exp01/E5_{variant}_cv_summary_seed{seed}.csv
+  importance_csv: reports/tables/E5_26-11-24_exp01/E5_{variant}_feature_importance_seed{seed}.csv
+  oof: reports/predictions/E5_26-11-24_exp01/E5_{variant}_seed{seed}_oof.parquet
+  run_json: reports/runs/E5_26-11-24_exp01/E5_{variant}_seed{seed}.json
+
+mlflow:
+  experiment: E6_calibration

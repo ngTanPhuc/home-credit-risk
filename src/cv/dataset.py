@@ -192,7 +192,72 @@ def load_split_frame(
         )
 
     frame = pd.read_parquet(path, columns=selected).loc[:, selected]
-    _validate_frame(frame, split=split, contract=contract, n_folds=n_folds)  # validate the loaded frame against the contract
+    _validate_frame(
+        frame, split=split, contract=contract, n_folds=n_folds
+    )  # validate the loaded frame against the contract
+    return frame
+
+
+def load_holdout_features(
+    config: Mapping[str, Any],
+    contract: Mapping[str, Any],
+    *,
+    columns: Sequence[str] | None = None,
+) -> pd.DataFrame:
+    """Load hold-out *features* only, never the target column.
+
+    The subject of this function is explanation, not evaluation: customers can be
+    scored and explained without exposing labels, so the locked hold-out split is
+    safe to read here. The returned frame is checked to contain no
+    ``target_column``, and requesting that column raises.
+
+    Parameters
+    ----------
+    config:
+        Resolved config; ``dataset.dir`` points at the dataset directory.
+    contract:
+        Output of :func:`load_contract`.
+    columns:
+        Optional subset of predictor columns to read.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Identifier plus predictors, in contract order.
+
+    Raises
+    ------
+    ValueError
+        If the target column is requested or ends up in the frame.
+    KeyError
+        If ``columns`` names something outside the hold-out contract.
+    """
+    target_column = str(contract["target_column"])
+    expected = [
+        str(name) for name in contract["dataset_columns"]["val"] if str(name) != target_column
+    ]
+
+    if columns is None:
+        selected = expected
+    else:
+        if target_column in {str(name) for name in columns}:
+            raise ValueError(
+                "load_holdout_features never returns the target column; "
+                "hold-out labels belong to src/evaluation/holdout.py"
+            )
+        unknown = [name for name in columns if name not in expected]
+        if unknown:
+            raise KeyError(f"Columns not in the val contract: {unknown}")
+        wanted = {str(name) for name in columns}
+        selected = [name for name in expected if name in wanted]
+
+    path = dataset_path(config, "val")
+    if not path.is_file():
+        raise FileNotFoundError(f"Dataset split not found: {path}. Build it with notebooks/01..04.")
+
+    frame = pd.read_parquet(path, columns=selected).loc[:, selected]
+    if target_column in frame.columns:  # defensive: a wrong contract must not leak labels
+        raise ValueError(f"Hold-out features must not contain {target_column}")
     return frame
 
 
