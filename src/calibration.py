@@ -263,6 +263,45 @@ def calibration_metrics(
     return metrics
 
 
+def reliability_curve(
+    target: Sequence[int] | np.ndarray,
+    probabilities: Sequence[float] | np.ndarray,
+    bins: int = 15,
+) -> dict[str, np.ndarray]:
+    """Bin rows by predicted probability for a reliability diagram.
+
+    Bins are equal-count (quantile) bins, the same definition the ECE metric
+    uses, so the plotted points and the reported ECE describe the same partition.
+
+    Returns
+    -------
+    dict
+        ``predicted`` and ``observed`` per bin, plus ``count``.
+    """
+    labels = np.asarray(target).reshape(-1).astype("float64")
+    values = _check_predictions(probabilities)
+    if labels.shape[0] != values.shape[0]:
+        raise ValueError("target length does not match probabilities")
+    if bins < 1:
+        raise ValueError("bins must be positive")
+
+    order = np.argsort(values, kind="stable")
+    predicted: list[float] = []
+    observed: list[float] = []
+    counts: list[int] = []
+    for chunk in np.array_split(order, int(bins)):
+        if chunk.size == 0:
+            continue
+        predicted.append(float(values[chunk].mean()))
+        observed.append(float(labels[chunk].mean()))
+        counts.append(int(chunk.size))
+    return {
+        "predicted": np.asarray(predicted, dtype="float64"),
+        "observed": np.asarray(observed, dtype="float64"),
+        "count": np.asarray(counts, dtype="int64"),
+    }
+
+
 def summarize_calibration(
     target: Sequence[int] | np.ndarray,
     probabilities: Sequence[float] | np.ndarray,

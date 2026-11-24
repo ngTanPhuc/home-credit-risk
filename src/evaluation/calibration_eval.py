@@ -36,6 +36,7 @@ from src.calibration import (
     calibration_by_arm,
     cross_fitted_predictions,
     recommend_calibrator,
+    reliability_curve,
 )
 from src.config import get_nested, load_config, resolve_path
 from src.cv.dataset import load_contract
@@ -209,7 +210,7 @@ def write_reliability_figure(
 
     for axis, name in zip(axes.ravel(), names, strict=False):
         payload = arms[name]
-        series = [("none", payload["y_prob"])]
+        series = [("none", payload["y_prob"], "#1f77b4")]
         chosen = str(choices.get(name, "none"))
         if chosen != "none":
             calibrated, _ = cross_fitted_predictions(
@@ -219,15 +220,19 @@ def write_reliability_figure(
                 build_calibrator(chosen),
                 min_rows=min_rows,
             )
-            series.append((chosen, calibrated))
+            series.append((chosen, calibrated, "#d62728"))
 
-        for label, probabilities in series:
-            order = np.argsort(probabilities)
-            for chunk in np.array_split(order, ece_bins):
-                predicted = float(np.mean(probabilities[chunk]))
-                observed = float(np.mean(payload["target"][chunk]))
-                axis.plot(predicted, observed, "o", markersize=3.5, label=None)
-            axis.plot([], [], label=label)
+        for label, probabilities, color in series:
+            curve = reliability_curve(payload["target"], probabilities, ece_bins)
+            axis.plot(
+                curve["predicted"],
+                curve["observed"],
+                "o-",
+                color=color,
+                markersize=3.5,
+                linewidth=1.0,
+                label=label,
+            )
 
         axis.plot([0.0, 1.0], [0.0, 1.0], linestyle="--", linewidth=0.8, color="grey")
         axis.set_title(f"{name}\nchosen: {chosen}")

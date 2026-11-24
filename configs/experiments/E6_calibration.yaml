@@ -47,11 +47,16 @@ calibration:
   record: reports/runs/{exp}/E6_calibration.json
 
 final:
-  # The single model/calibrator pair Phase 9 evaluates on the hold-out.
-  # E5 evidence favours the cross-fitted stack, which is also the best-calibrated
-  # arm before E6 (Brier 0,06607 / ECE 0,00561). Replace after reading E6.
+  # The single model/calibrator pair Phase 9 evaluates on the hold-out. Frozen
+  # 26-11-24 from E6 (run E6_26-11-24_exp01): `stacking` has the best Brier,
+  # log loss and ECE of the five arms, and `isotonic` is the only calibrator that
+  # improves it (Brier 0,066070 -> 0,065950, ECE 0,005605 -> 0,003315, both
+  # consistent on seeds 42/43/44; Platt on the stack is a no-op). Cost, which the
+  # report must state: the isotonic map is a ~100-level step function, so rank
+  # metrics on the stored probability read ~0,0002 AUC / ~0,0012 KS lower than the
+  # raw stack; tie-broken by the raw score the AUC is identical. See DECISIONS.md.
   arm: stacking
-  calibrator: platt
+  calibrator: isotonic
   # Model seed the final fit uses; must be one of seeds.model.
   seed: 42
 

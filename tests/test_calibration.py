@@ -12,6 +12,7 @@ from src.calibration import (
     calibration_metrics,
     cross_fitted_predictions,
     recommend_calibrator,
+    reliability_curve,
     summarize_calibration,
 )
 
@@ -144,3 +145,28 @@ def test_predictions_must_be_probabilities():
     calibrator = build_calibrator("none")
     with pytest.raises(ValueError, match=r"\[0, 1\]"):
         calibrator.fit(np.array([0, 1]), np.array([0.2, 1.4]))
+
+
+def test_reliability_curve_bins_by_quantile_and_tracks_a_perfect_model():
+    rng = np.random.default_rng(3)
+    probabilities = rng.uniform(size=1_000)
+    target = (rng.random(1_000) < probabilities).astype("int8")
+
+    curve = reliability_curve(target, probabilities, bins=10)
+
+    assert curve["predicted"].size == 10
+    assert curve["predicted"].shape == curve["observed"].shape == curve["count"].shape
+    assert curve["count"].sum() == 1_000
+    assert np.all(np.diff(curve["predicted"]) >= 0)
+
+    # The points are the equal-count bin means, nothing else.
+    order = np.argsort(probabilities, kind="stable")
+    chunks = np.array_split(order, 10)
+    assert np.allclose(curve["predicted"], [probabilities[c].mean() for c in chunks])
+    assert np.allclose(curve["observed"], [target[c].mean() for c in chunks])
+
+    # With enough rows per bin, a perfectly calibrated model lands on the diagonal.
+    exact = np.repeat(np.linspace(0.05, 0.95, 10), 5_000)
+    exact_target = (rng.random(exact.size) < exact).astype("int8")
+    diagonal = reliability_curve(exact_target, exact, bins=10)
+    assert np.abs(diagonal["predicted"] - diagonal["observed"]).max() < 0.05
