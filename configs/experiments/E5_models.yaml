@@ -1,0 +1,51 @@
+# E5: model comparison and ensemble (RQ2).
+# Three GBDTs tuned in E4 on the E2 winner feature set, the E3 `class_weight`
+# variant, 3 model seeds and the same frozen folds. src/evaluation/model_comparison.py
+# copies each model's E4 `final_params` (tuned values plus the fixed iteration
+# count) over `params`, so E5 refits without early stopping or a validation pair.
+# The same driver adds the cross-fitted weighted-average and logistic-stacking
+# arms and writes B2, the pairwise DeLong table and the ROC/PR figure.
+
+extends:
+  - ../base.yaml
+  - ../features.yaml
+
+experiment: E5_models
+variant: tuned
+data_version: datasets_v1
+
+features:
+  use_set: plus_installments
+
+imbalance:
+  strategy: class_weight  # E3 decision for E4-E7
+
+seeds:
+  split: 42
+  model: [42, 43, 44]
+
+comparison:
+  models:
+    lightgbm: configs/models/lightgbm.yaml
+    xgboost: configs/models/xgboost.yaml
+    catboost: configs/models/catboost.yaml
+  # E4 output: `models.<name>.final_params` replaces each model's `params`.
+  best_params: reports/runs/E4_26-11-18_exp01/E4_best_params.json
+  ensembles: [weighted_average, stacking]
+  # Grid resolution for the blend weights fitted on each fold's other-fold OOF.
+  weight_step: 0.05
+  table: reports/tables/B2_model_comparison.csv
+  delong_table: reports/tables/E5_delong_pairs.csv
+  figure: reports/figures/E5_roc_pr.png
+  record: reports/runs/{exp}/E5_ensembles.json
+
+outputs:
+  exp: E5_26-11-24_exp01
+  folds_csv: reports/tables/{exp}/E5_{variant}_cv_folds_seed{seed}.csv
+  summary_csv: reports/tables/{exp}/E5_{variant}_cv_summary_seed{seed}.csv
+  importance_csv: reports/tables/{exp}/E5_{variant}_feature_importance_seed{seed}.csv
+  oof: reports/predictions/{exp}/E5_{variant}_seed{seed}_oof.parquet
+  run_json: reports/runs/{exp}/E5_{variant}_seed{seed}.json
+
+mlflow:
+  experiment: E5_models

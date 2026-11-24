@@ -4,7 +4,7 @@ Building a credit risk scoring pipeline on the Kaggle **Home Credit Default Risk
 
 The task is binary classification on seven relational tables. For each applicant in `application_train`, predict `P(TARGET = 1 | x)`, then calibrate the probability and explain the drivers. Positives are roughly 8% of the data.
 
-> **Project status: Phases 0-6 done (E1 baseline, E2 ablation, E3 imbalance, E4 tuning logged), Phase 7 (E5 model comparison and ensemble) next.** Person A's dataset is frozen (`data/processed/datasets/`, contract `datasets_v1`, 180 predictors), the split protocol is single and fixed, `src/cv` + `src/models` + `src/evaluation` + `src/tuning` are implemented, and `tests/` passes. The notebooks 01..04 build the data; `src/` only models it. `AGENTS.md` defines the workflow, phases and ownership; `INIT.md` holds the research questions, dataset specification and methodology.
+> **Project status: Phases 0-7 done (E1 baseline, E2 ablation, E3 imbalance, E4 tuning, E5 model comparison and ensemble logged); Phase 8 (E6 calibration) is next.** Person A's dataset is frozen (`data/processed/datasets/`, contract `datasets_v1`, 180 predictors), the split protocol is single and fixed, `src/cv` + `src/models` + `src/evaluation` + `src/tuning` are implemented, and `tests/` passes. The notebooks 01..04 build the data; `src/` only models it. `AGENTS.md` defines the workflow, phases and ownership; `INIT.md` holds the research questions, dataset specification and methodology.
 
 ## Scope
 
@@ -148,6 +148,9 @@ uv run python3 -m src.evaluation.imbalance_comparison --config configs/experimen
 # Tune E4 (resumable via Optuna SQLite storage); --trials N and --models a,b restrict the run
 uv run python3 -m src.tuning.optuna_search --config configs/experiments/E4_tuning.yaml
 
+# E5 comparison: 3 tuned GBDTs x 3 seeds, cross-fitted ensembles, B2 + DeLong pairs
+uv run python3 -m src.evaluation.model_comparison --config configs/experiments/E5_models.yaml
+
 # Final hold-out evaluation — run ONCE, deliberately
 uv run python3 -m src.evaluation.holdout --config configs/experiments/E5_models.yaml --confirm-final
 
@@ -156,7 +159,7 @@ uv run python3 -m src.explain.shap_analysis --config configs/experiments/E7_expl
 uv run python3 -m src.explain.agreement --config configs/experiments/E7_explain.yaml
 ```
 
-Working commands: `src.cv.runner` (E1), `src.evaluation.ablation` (E2), `src.evaluation.imbalance_comparison` (E3) and `src.tuning.optuna_search` (E4). The hold-out, calibration and explanation commands land with their phases.
+Working commands: `src.cv.runner` (E1), `src.evaluation.ablation` (E2), `src.evaluation.imbalance_comparison` (E3), `src.tuning.optuna_search` (E4) and `src.evaluation.model_comparison` (E5). The hold-out, calibration and explanation commands land with their phases.
 
 ## Repository layout
 
@@ -207,7 +210,9 @@ One MLflow experiment per ID (`E1_baseline`, ...). Run name format: `<model>_<va
 
 E3 is done: AUC 0.77836 (`none`), 0.77920 (`class_weight`), 0.77753 (`undersample`), 0.69120 (`smotenc`) on `plus_installments`. `class_weight` is the chosen variant for E4-E7, but its ECE 0.29946 (vs 0.00434 for `none`) makes E6 calibration mandatory before any probability is reported. See `reports/E3_report.md`.
 
-E4 is done: 40 Optuna TPE trials per model on `plus_installments` with `class_weight` moved default → tuned AUC from 0.77920 → 0.78424 (LightGBM), 0.77528 → 0.78717 (XGBoost) and 0.78259 → 0.78607 (CatBoost); tuned fold std is ~0.0013 and no trial failed. The LightGBM default run reproduces the E3 `class_weight` AUC exactly, so the harness replays the E1-E3 protocol. Two caveats: the best-so-far curve is flat from trial ~4, so 40 trials was more than needed, and the winners learn slowly enough that the 2000-round budget binds, so the tuned AUC is if anything slightly under-fitted. Tuned parameters with a fixed iteration count (`fixed_iterations` / `final_params`) are saved for E5 in `reports/runs/E4_26-11-18_exp01/E4_best_params.json`. See `DECISIONS.md`.
+E4 is done: 40 Optuna TPE trials per model on `plus_installments` with `class_weight` moved default → tuned AUC from 0.77920 → 0.78424 (LightGBM), 0.77528 → 0.78717 (XGBoost) and 0.78259 → 0.78607 (CatBoost); tuned fold std is ~0.0013 and no trial failed. The LightGBM default run reproduces the E3 `class_weight` AUC exactly, so the harness replays the E1-E3 protocol. Two caveats: the best-so-far curve is flat from trial ~4, so 40 trials was more than needed, and the winners learn slowly enough that the 2000-round budget binds — but E5's capacity probe shows 2000 is the peak, so raising the cap overfits (see below). Tuned parameters with a fixed iteration count (`fixed_iterations` / `final_params`) are saved for E5 in `reports/runs/E4_26-11-18_exp01/E4_best_params.json`. See `DECISIONS.md`.
+
+E5 is done: three tuned GBDTs × 3 seeds on `plus_installments` score LightGBM 0.78413 ± 0.00014, XGBoost 0.78718 ± 0.00001 and CatBoost 0.78615 ± 0.00006 (per-seed mean over 5 folds, then mean ± std over seeds). Stacking reaches 0.78783 ± 0.00008, beating XGBoost by +0.00065 with a DeLong p of 1.4e-05 to 0.0020 on all three seeds, and it repairs most of the `class_weight` scale damage without E6 (Brier 0.06607, ECE 0.00561). The weighted average degenerated onto LightGBM (weight 1.0 in every fold, identical row in B2): it minimizes log loss, and with three near-identically ranked models that differ only in how badly `class_weight` inflates their probabilities, the optimum is the best-scaled member rather than a blend. Its row is therefore reported as evidence of that, not as an independent ensemble result. The gain is small because the three models are near-duplicates on one 180-column table (pairwise Spearman 0.968-0.979, top-5% Jaccard 0.698-0.752); more AUC has to come from features, not the ensemble. Run cost 50.7 min and 3.80 GB peak; the hold-out stayed locked. See `DECISIONS.md`.
 
 ## Kaggle workflow
 
@@ -224,6 +229,7 @@ Kaggle sessions are time- and memory-limited (16 GB RAM ceiling):
 - `reports/tables/B1_ablation.csv`, `B2_model_comparison.csv`, `B3_calibration.csv`, `B4_delong_pairs.csv`
 - `reports/tables/E3_imbalance_comparison.csv` and per-variant fold/summary/importance CSVs under `reports/tables/E3_<run>/`
 - E4: `reports/tables/E4_tuning_comparison.csv`, `reports/tables/E4_tuning_history.csv`, best parameters (with the fixed iteration count for E5) in `reports/runs/E4_<run>/E4_best_params.json`, and the AUC-vs-trial figure `reports/figures/E4_optuna_history.png`
+- E5: `reports/tables/B2_model_comparison.csv` (mean ± std over seeds), `reports/tables/E5_delong_pairs.csv`, `reports/runs/E5_<run>/E5_ensembles.json` (blend weights per seed) and `reports/figures/E5_roc_pr.png`
 - Per-experiment reports: `reports/E1_report.md`, `reports/E2_report.md`, `reports/E3_report.md`
 - `reports/figures/`: ROC/PR curves, Optuna history, reliability diagrams, SHAP summary/dependence/waterfall, importance-agreement heatmap
 - `mlruns/`: local MLflow tracking (gitignored)
