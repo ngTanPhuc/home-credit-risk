@@ -1,0 +1,31 @@
+# Phase 9: the single final hold-out evaluation.
+# Inherits the frozen `final` choice and the E5 model/OOF inputs from
+# E6_calibration.yaml; only the outputs change. Run it ONCE:
+#
+#   uv run python -m src.evaluation.holdout --config configs/experiments/holdout_final.yaml --confirm-final
+#
+# The script refuses to run without --confirm-final and refuses to overwrite an
+# earlier B3/B4, so a second evaluation requires deleting those artifacts on
+# purpose. Freeze `final.arm` / `final.calibrator` in E6_calibration.yaml after
+# reviewing E6 and record the decision in DECISIONS.md.
+
+extends:
+  - ./E6_calibration.yaml
+
+experiment: holdout_final
+variant: final
+
+outputs:
+  exp: holdout_26-11-24
+
+holdout:
+  table: reports/tables/B3_calibration.csv
+  delong_table: reports/tables/B4_delong_pairs.csv
+  figure: reports/figures/holdout_reliability.png
+  record: reports/runs/{exp}/holdout_final.json
+
+submission:
+  # Kaggle upload: two columns, SK_ID_CURR and TARGET.
+  out: reports/submissions/submission_{exp}.csv
+  model: reports/runs/{exp}/final_model.joblib
+  record: reports/runs/{exp}/submission.json

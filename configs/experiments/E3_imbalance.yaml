@@ -1,0 +1,43 @@
+# E3: imbalance handling (RQ3) on the E2 winner feature set.
+# Every variant replays the same folds, seed, feature set and LightGBM defaults; only
+# `imbalance.strategy` changes. src/evaluation/imbalance_comparison.py swaps the
+# strategy per variant and builds reports/tables/E3_imbalance_comparison.csv.
+# The SMOTENC variant fills missing values inside each training fold because SMOTENC
+# rejects NaN (see src/imbalance.py); validation keeps the original missingness.
+
+extends:
+  - ../base.yaml
+  - ../features.yaml
+  - ../models/lightgbm.yaml
+
+experiment: E3_imbalance
+variant: none
+data_version: datasets_v1
+
+features:
+  use_set: plus_installments
+
+imbalance:
+  strategy: none  # replaced per variant by the comparison runner
+  # `none` must stay first: it is the reference for delta_auc_vs_none.
+  variants:
+    - none
+    - class_weight
+    - undersample
+    - smotenc
+  # Desired minority/majority row ratio after resampling (samplers' convention),
+  # used by the undersample and smotenc variants.
+  sampling_strategy: 0.5
+  n_neighbors: 5
+  table: reports/tables/E3_imbalance_comparison.csv
+
+outputs:
+  exp: E3_26-11-17_exp01
+  folds_csv: reports/tables/{exp}/E3_{variant}_cv_folds_seed{seed}.csv
+  summary_csv: reports/tables/{exp}/E3_{variant}_cv_summary_seed{seed}.csv
+  importance_csv: reports/tables/{exp}/E3_{variant}_feature_importance_seed{seed}.csv
+  oof: reports/predictions/{exp}/E3_{variant}_lgbm_seed{seed}_oof.parquet
+  run_json: reports/runs/{exp}/E3_{variant}_lgbm_seed{seed}.json
+
+mlflow:
+  experiment: E3_imbalance

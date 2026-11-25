@@ -10,6 +10,7 @@ requires-python = ">=3.13"
 dependencies = [
     "catboost>=1.2",
     "imbalanced-learn>=0.12",
+    "joblib>=1.6.0",
     "lightgbm>=4.5",
     "matplotlib>=3.9",
     "mlflow>=3.0",

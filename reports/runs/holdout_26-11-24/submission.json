@@ -1,0 +1,372 @@
+{
+  "artifacts": {
+    "record": "/home/phuc/Projects/home-credit-risk_v2.0/reports/runs/holdout_26-11-24/submission.json",
+    "submission": "/home/phuc/Projects/home-credit-risk_v2.0/reports/submissions/submission_holdout_26-11-24.csv"
+  },
+  "choice": {
+    "arm": "stacking",
+    "calibrator": "isotonic",
+    "seed": 42
+  },
+  "config": {
+    "calibration": {
+      "calibrators": [
+        "none",
+        "platt",
+        "isotonic"
+      ],
+      "figure": "reports/figures/E6_reliability.png",
+      "fold_table": "reports/tables/E6_calibration_folds.csv",
+      "min_rows": 2000,
+      "record": "reports/runs/{exp}/E6_calibration.json",
+      "table": "reports/tables/E6_calibration.csv"
+    },
+    "comparison": {
+      "best_params": "reports/runs/E4_26-11-18_exp01/E4_best_params.json",
+      "ensembles": [
+        "weighted_average",
+        "stacking"
+      ],
+      "models": {
+        "catboost": "configs/models/catboost.yaml",
+        "lightgbm": "configs/models/lightgbm.yaml",
+        "xgboost": "configs/models/xgboost.yaml"
+      },
+      "weight_step": 0.05
+    },
+    "data_version": "datasets_v1",
+    "dataset": {
+      "contract": "data/processed/datasets/feature_contract.json",
+      "dir": "data/processed/datasets"
+    },
+    "experiment": "holdout_final",
+    "feature_groups": {
+      "application": [
+        "APP_CREDIT_INCOME_RATIO",
+        "APP_ANNUITY_INCOME_RATIO",
+        "APP_CREDIT_ANNUITY_RATIO",
+        "APP_CREDIT_GOODS_RATIO",
+        "APP_INCOME_PER_FAMILY_MEMBER",
+        "APP_AGE_YEARS",
+        "APP_EMPLOYMENT_YEARS",
+        "APP_EMPLOYMENT_AGE_RATIO",
+        "APP_EXT_SOURCE_MEAN",
+        "APP_EXT_SOURCE_STD"
+      ],
+      "application_original": [
+        "NAME_CONTRACT_TYPE",
+        "CODE_GENDER",
+        "FLAG_OWN_CAR",
+        "FLAG_OWN_REALTY",
+        "CNT_CHILDREN",
+        "AMT_INCOME_TOTAL",
+        "AMT_CREDIT",
+        "AMT_ANNUITY",
+        "AMT_GOODS_PRICE",
+        "NAME_TYPE_SUITE",
+        "NAME_INCOME_TYPE",
+        "NAME_EDUCATION_TYPE",
+        "NAME_FAMILY_STATUS",
+        "NAME_HOUSING_TYPE",
+        "REGION_POPULATION_RELATIVE",
+        "DAYS_BIRTH",
+        "DAYS_EMPLOYED",
+        "DAYS_REGISTRATION",
+        "DAYS_ID_PUBLISH",
+        "OWN_CAR_AGE",
+        "FLAG_MOBIL",
+        "FLAG_EMP_PHONE",
+        "FLAG_WORK_PHONE",
+        "FLAG_CONT_MOBILE",
+        "FLAG_PHONE",
+        "FLAG_EMAIL",
+        "OCCUPATION_TYPE",
+        "CNT_FAM_MEMBERS",
+        "REGION_RATING_CLIENT",
+        "REGION_RATING_CLIENT_W_CITY",
+        "WEEKDAY_APPR_PROCESS_START",
+        "HOUR_APPR_PROCESS_START",
+        "REG_REGION_NOT_LIVE_REGION",
+        "REG_REGION_NOT_WORK_REGION",
+        "LIVE_REGION_NOT_WORK_REGION",
+        "REG_CITY_NOT_LIVE_CITY",
+        "REG_CITY_NOT_WORK_CITY",
+        "LIVE_CITY_NOT_WORK_CITY",
+        "ORGANIZATION_TYPE",
+        "EXT_SOURCE_1",
+        "EXT_SOURCE_2",
+        "EXT_SOURCE_3",
+        "APARTMENTS_AVG",
+        "BASEMENTAREA_AVG",
+        "YEARS_BEGINEXPLUATATION_AVG",
+        "YEARS_BUILD_AVG",
+        "COMMONAREA_AVG",
+        "ELEVATORS_AVG",
+        "ENTRANCES_AVG",
+        "FLOORSMAX_AVG",
+        "FLOORSMIN_AVG",
+        "LANDAREA_AVG",
+        "LIVINGAPARTMENTS_AVG",
+        "LIVINGAREA_AVG",
+        "NONLIVINGAPARTMENTS_AVG",
+        "NONLIVINGAREA_AVG",
+        "APARTMENTS_MODE",
+        "BASEMENTAREA_MODE",
+        "YEARS_BEGINEXPLUATATION_MODE",
+        "YEARS_BUILD_MODE",
+        "COMMONAREA_MODE",
+        "ELEVATORS_MODE",
+        "ENTRANCES_MODE",
+        "FLOORSMAX_MODE",
+        "FLOORSMIN_MODE",
+        "LANDAREA_MODE",
+        "LIVINGAPARTMENTS_MODE",
+        "LIVINGAREA_MODE",
+        "NONLIVINGAPARTMENTS_MODE",
+        "NONLIVINGAREA_MODE",
+        "APARTMENTS_MEDI",
+        "BASEMENTAREA_MEDI",
+        "YEARS_BEGINEXPLUATATION_MEDI",
+        "YEARS_BUILD_MEDI",
+        "COMMONAREA_MEDI",
+        "ELEVATORS_MEDI",
+        "ENTRANCES_MEDI",
+        "FLOORSMAX_MEDI",
+        "FLOORSMIN_MEDI",
+        "LANDAREA_MEDI",
+        "LIVINGAPARTMENTS_MEDI",
+        "LIVINGAREA_MEDI",
+        "NONLIVINGAPARTMENTS_MEDI",
+        "NONLIVINGAREA_MEDI",
+        "FONDKAPREMONT_MODE",
+        "HOUSETYPE_MODE",
+        "TOTALAREA_MODE",
+        "WALLSMATERIAL_MODE",
+        "EMERGENCYSTATE_MODE",
+        "OBS_30_CNT_SOCIAL_CIRCLE",
+        "DEF_30_CNT_SOCIAL_CIRCLE",
+        "OBS_60_CNT_SOCIAL_CIRCLE",
+        "DEF_60_CNT_SOCIAL_CIRCLE",
+        "DAYS_LAST_PHONE_CHANGE",
+        "FLAG_DOCUMENT_2",
+        "FLAG_DOCUMENT_3",
+        "FLAG_DOCUMENT_4",
+        "FLAG_DOCUMENT_5",
+        "FLAG_DOCUMENT_6",
+        "FLAG_DOCUMENT_7",
+        "FLAG_DOCUMENT_8",
+        "FLAG_DOCUMENT_9",
+        "FLAG_DOCUMENT_10",
+        "FLAG_DOCUMENT_11",
+        "FLAG_DOCUMENT_12",
+        "FLAG_DOCUMENT_13",
+        "FLAG_DOCUMENT_14",
+        "FLAG_DOCUMENT_15",
+        "FLAG_DOCUMENT_16",
+        "FLAG_DOCUMENT_17",
+        "FLAG_DOCUMENT_18",
+        "FLAG_DOCUMENT_19",
+        "FLAG_DOCUMENT_20",
+        "FLAG_DOCUMENT_21",
+        "AMT_REQ_CREDIT_BUREAU_HOUR",
+        "AMT_REQ_CREDIT_BUREAU_DAY",
+        "AMT_REQ_CREDIT_BUREAU_WEEK",
+        "AMT_REQ_CREDIT_BUREAU_MON",
+        "AMT_REQ_CREDIT_BUREAU_QRT",
+        "AMT_REQ_CREDIT_BUREAU_YEAR"
+      ],
+      "bureau": [
+        "BUREAU_N_LOANS",
+        "BUREAU_ACTIVE_RATE",
+        "BUREAU_CREDIT_SUM",
+        "BUREAU_DEBT_SUM",
+        "BUREAU_DEBT_MAX",
+        "BUREAU_OVERDUE_MAX",
+        "BUREAU_DPD_MAX",
+        "BUREAU_DAYS_CREDIT_MAX",
+        "BUREAU_N_RECENT_365",
+        "BUREAU_BB_N_LOANS",
+        "BUREAU_BB_MONTHS_SUM",
+        "BUREAU_BB_KNOWN_MONTHS_SUM",
+        "BUREAU_BB_LATE_MONTHS_SUM",
+        "BUREAU_BB_LATE_RATE_MEAN_LOAN",
+        "BUREAU_DEBT_CREDIT_RATIO_MEAN_LOAN",
+        "BUREAU_BB_LATE_RATE_WEIGHTED",
+        "HAS_BUREAU"
+      ],
+      "credit_card": [
+        "CC_N_LOANS",
+        "CC_N_MONTHS",
+        "CC_UTILIZATION_MEAN_LOAN",
+        "CC_UTILIZATION_MAX",
+        "CC_DPD_MAX",
+        "CC_LATEST_BALANCE_SUM",
+        "CC_LATEST_LIMIT_SUM",
+        "HAS_CREDIT_CARD"
+      ],
+      "installments": [
+        "INS_N_LOANS",
+        "INS_N_DUE_PERIODS",
+        "INS_N_KNOWN_PAYMENT_PERIODS",
+        "INS_N_MULTI_RECORD_PERIODS",
+        "INS_PAYMENT_RATIO_MEAN_LOAN",
+        "INS_LAST_OBSERVED_PAYMENT_DELAY_MAX",
+        "INS_OBS_PAYMENT_SUM",
+        "INS_UNDERPAY_RATE_MEAN_LOAN",
+        "HAS_INSTALLMENTS"
+      ],
+      "pos": [
+        "POS_N_LOANS",
+        "POS_N_MONTHS",
+        "POS_DPD_MEAN_LOAN",
+        "POS_DPD_MAX",
+        "POS_LATEST_FUTURE_INSTALLMENTS_SUM",
+        "HAS_POS"
+      ],
+      "previous": [
+        "PREV_N_APPLICATIONS",
+        "PREV_APPROVAL_RATE",
+        "PREV_REFUSAL_RATE",
+        "PREV_CREDIT_MEAN",
+        "PREV_CREDIT_MAX",
+        "PREV_APPROVED_CREDIT_SUM",
+        "PREV_CREDIT_APPLICATION_RATIO_MEAN",
+        "PREV_DAYS_DECISION_MAX",
+        "PREV_N_RECENT_365",
+        "HAS_PREVIOUS"
+      ]
+    },
+    "feature_sets": {
+      "main": [
+        "application_original"
+      ],
+      "main_plus_ratios": [
+        "application_original",
+        "application"
+      ],
+      "plus_bureau": [
+        "application_original",
+        "application",
+        "bureau"
+      ],
+      "plus_credit_card": [
+        "application_original",
+        "application",
+        "bureau",
+        "previous",
+        "pos",
+        "credit_card"
+      ],
+      "plus_installments": [
+        "application_original",
+        "application",
+        "bureau",
+        "previous",
+        "pos",
+        "credit_card",
+        "installments"
+      ],
+      "plus_pos": [
+        "application_original",
+        "application",
+        "bureau",
+        "previous",
+        "pos"
+      ],
+      "plus_previous": [
+        "application_original",
+        "application",
+        "bureau",
+        "previous"
+      ]
+    },
+    "features": {
+      "categorical_features": "auto",
+      "use_set": "plus_installments"
+    },
+    "final": {
+      "arm": "stacking",
+      "calibrator": "isotonic",
+      "seed": 42
+    },
+    "holdout": {
+      "delong_table": "reports/tables/B4_delong_pairs.csv",
+      "figure": "reports/figures/holdout_reliability.png",
+      "record": "reports/runs/{exp}/holdout_final.json",
+      "table": "reports/tables/B3_calibration.csv"
+    },
+    "imbalance": {
+      "strategy": "class_weight"
+    },
+    "logging": {
+      "level": "INFO"
+    },
+    "metrics": {
+      "ece_bins": 15,
+      "thresholds": [
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5
+      ]
+    },
+    "mlflow": {
+      "experiment": "E6_calibration",
+      "tracking_uri": "mlruns"
+    },
+    "outputs": {
+      "exp": "holdout_26-11-24",
+      "folds_csv": "reports/tables/E5_26-11-24_exp01/E5_{variant}_cv_folds_seed{seed}.csv",
+      "importance_csv": "reports/tables/E5_26-11-24_exp01/E5_{variant}_feature_importance_seed{seed}.csv",
+      "oof": "reports/predictions/E5_26-11-24_exp01/E5_{variant}_seed{seed}_oof.parquet",
+      "run_json": "reports/runs/E5_26-11-24_exp01/E5_{variant}_seed{seed}.json",
+      "summary_csv": "reports/tables/E5_26-11-24_exp01/E5_{variant}_cv_summary_seed{seed}.csv"
+    },
+    "paths": {
+      "figures_dir": "reports/figures",
+      "mlruns_dir": "mlruns",
+      "predictions_dir": "reports/predictions",
+      "runs_dir": "reports/runs",
+      "tables_dir": "reports/tables"
+    },
+    "seeds": {
+      "model": [
+        42,
+        43,
+        44
+      ],
+      "split": 42
+    },
+    "split": {
+      "holdout_fraction": 0.2,
+      "metadata": "data/splits/train_val_metadata.json",
+      "n_folds": 5
+    },
+    "submission": {
+      "model": "reports/runs/{exp}/final_model.joblib",
+      "out": "reports/submissions/submission_{exp}.csv",
+      "record": "reports/runs/{exp}/submission.json"
+    },
+    "variant": "final",
+    "version": "datasets_v1"
+  },
+  "config_digest": "6ac870162bd58c0f0876658657181242a9cea3a9fc84db080f78a504ae10a283",
+  "development_positive_rate": 0.08072908198107379,
+  "experiment": "holdout_final",
+  "git_commit": "09e576352286d74a1161ac7f88c4e66d22b92b84",
+  "model_bundle": "/home/phuc/Projects/home-credit-risk_v2.0/reports/runs/holdout_26-11-24/final_model.joblib",
+  "n_development_rows": 246008,
+  "n_features": 180,
+  "n_test_rows": 48744,
+  "note": "Test-split predictions of the frozen model; no test label exists. The development positive rate is the expected mean; a large shift means the feature pipeline changed, not that the model improved.",
+  "prediction_summary": {
+    "max_probability": 0.7125,
+    "mean_probability": 0.07447890300884226,
+    "min_probability": 0.0,
+    "n_rows": 48744,
+    "share_above_0_2": 0.08755949450188741,
+    "share_above_0_5": 0.0034465780403741997
+  },
+  "sample": null
+}

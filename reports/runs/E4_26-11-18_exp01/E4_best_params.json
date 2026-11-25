@@ -1,0 +1,149 @@
+{
+  "experiment": "E4_tuning",
+  "imbalance": {
+    "name": "class_weight"
+  },
+  "models": {
+    "catboost": {
+      "base_params": {
+        "iterations": 2000
+      },
+      "best_iterations": [
+        1999,
+        1999,
+        1999,
+        1999,
+        1999
+      ],
+      "best_params": {
+        "bagging_temperature": 0.12344615365543594,
+        "border_count": 168,
+        "depth": 5,
+        "l2_leaf_reg": 25.229123760118576,
+        "learning_rate": 0.02907813019834652
+      },
+      "best_value": 0.7860706732395482,
+      "default_auc": 0.7825885683464463,
+      "final_params": {
+        "bagging_temperature": 0.12344615365543594,
+        "border_count": 168,
+        "depth": 5,
+        "iterations": 2000,
+        "l2_leaf_reg": 25.229123760118576,
+        "learning_rate": 0.02907813019834652
+      },
+      "fixed_iterations": 2000,
+      "fold_aucs": [
+        0.78761107767639,
+        0.7840009961394586,
+        0.7851523176050615,
+        0.7876207264110174,
+        0.7859682483658131
+      ],
+      "iterations_parameter": "iterations",
+      "model": "catboost",
+      "n_completed_trials": 37,
+      "n_failed_trials": 0,
+      "n_pruned_trials": 3,
+      "study": "E4_catboost"
+    },
+    "lightgbm": {
+      "base_params": {
+        "n_estimators": 2000
+      },
+      "best_iterations": [
+        2000,
+        2000,
+        2000,
+        2000,
+        2000
+      ],
+      "best_params": {
+        "colsample_bytree": 0.6316346805807632,
+        "learning_rate": 0.010548064267935038,
+        "min_child_samples": 55,
+        "num_leaves": 30,
+        "reg_alpha": 1.3098249686715646,
+        "reg_lambda": 1.82760883798448,
+        "subsample": 0.7003272888899024
+      },
+      "best_value": 0.7842411296400865,
+      "default_auc": 0.7792008651354854,
+      "final_params": {
+        "colsample_bytree": 0.6316346805807632,
+        "learning_rate": 0.010548064267935038,
+        "min_child_samples": 55,
+        "n_estimators": 2000,
+        "num_leaves": 30,
+        "reg_alpha": 1.3098249686715646,
+        "reg_lambda": 1.82760883798448,
+        "subsample": 0.7003272888899024
+      },
+      "fixed_iterations": 2000,
+      "fold_aucs": [
+        0.7862362259896214,
+        0.7823436451802013,
+        0.7840982555536333,
+        0.7838658611340651,
+        0.7846616603429116
+      ],
+      "iterations_parameter": "n_estimators",
+      "model": "lightgbm",
+      "n_completed_trials": 38,
+      "n_failed_trials": 0,
+      "n_pruned_trials": 2,
+      "study": "E4_lightgbm"
+    },
+    "xgboost": {
+      "base_params": {
+        "n_estimators": 2000
+      },
+      "best_iterations": [
+        1998,
+        1999,
+        1997,
+        1995,
+        1994
+      ],
+      "best_params": {
+        "colsample_bytree": 0.9834929607525029,
+        "learning_rate": 0.01935960667087448,
+        "max_depth": 4,
+        "min_child_weight": 6.41667358128117,
+        "reg_alpha": 7.293105893126888,
+        "reg_lambda": 0.00012994228664713265,
+        "subsample": 0.7313089733466093
+      },
+      "best_value": 0.7871679807158996,
+      "default_auc": 0.7752773305170779,
+      "final_params": {
+        "colsample_bytree": 0.9834929607525029,
+        "learning_rate": 0.01935960667087448,
+        "max_depth": 4,
+        "min_child_weight": 6.41667358128117,
+        "n_estimators": 1998,
+        "reg_alpha": 7.293105893126888,
+        "reg_lambda": 0.00012994228664713265,
+        "subsample": 0.7313089733466093
+      },
+      "fixed_iterations": 1998,
+      "fold_aucs": [
+        0.7893085614334612,
+        0.7852789557857913,
+        0.7862855904441861,
+        0.7873143021068326,
+        0.787652493809226
+      ],
+      "iterations_parameter": "n_estimators",
+      "model": "xgboost",
+      "n_completed_trials": 38,
+      "n_failed_trials": 0,
+      "n_pruned_trials": 2,
+      "study": "E4_xgboost"
+    }
+  },
+  "n_development_rows": 246008,
+  "n_features": 180,
+  "peak_memory_mb": 5553.28515625,
+  "seed": 42
+}

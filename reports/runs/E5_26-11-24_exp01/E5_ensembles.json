@@ -1,0 +1,122 @@
+{
+  "ensembles": [
+    "weighted_average",
+    "stacking"
+  ],
+  "experiment": "E5_models",
+  "models": [
+    "lightgbm",
+    "xgboost",
+    "catboost"
+  ],
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "seeds_detail": {
+    "42": {
+      "average_weights_all_rows": {
+        "catboost": 0.0,
+        "lightgbm": 1.0,
+        "xgboost": 0.0
+      },
+      "average_weights_by_fold": {
+        "0": {
+          "catboost": 0.0,
+          "lightgbm": 1.0,
+          "xgboost": 0.0
+        },
+        "1": {
+          "catboost": 0.0,
+          "lightgbm": 1.0,
+          "xgboost": 0.0
+        },
+        "2": {
+          "catboost": 0.0,
+          "lightgbm": 1.0,
+          "xgboost": 0.0
+        },
+        "3": {
+          "catboost": 0.0,
+          "lightgbm": 1.0,
+          "xgboost": 0.0
+        },
+        "4": {
+          "catboost": 0.0,
+          "lightgbm": 1.0,
+          "xgboost": 0.0
+        }
+      }
+    },
+    "43": {
+      "average_weights_all_rows": {
+        "catboost": 0.0,
+        "lightgbm": 1.0,
+        "xgboost": 0.0
+      },
+      "average_weights_by_fold": {
+        "0": {
+          "catboost": 0.0,
+          "lightgbm": 1.0,
+          "xgboost": 0.0
+        },
+        "1": {
+          "catboost": 0.0,
+          "lightgbm": 1.0,
+          "xgboost": 0.0
+        },
+        "2": {
+          "catboost": 0.0,
+          "lightgbm": 1.0,
+          "xgboost": 0.0
+        },
+        "3": {
+          "catboost": 0.0,
+          "lightgbm": 1.0,
+          "xgboost": 0.0
+        },
+        "4": {
+          "catboost": 0.0,
+          "lightgbm": 1.0,
+          "xgboost": 0.0
+        }
+      }
+    },
+    "44": {
+      "average_weights_all_rows": {
+        "catboost": 0.0,
+        "lightgbm": 1.0,
+        "xgboost": 0.0
+      },
+      "average_weights_by_fold": {
+        "0": {
+          "catboost": 0.0,
+          "lightgbm": 1.0,
+          "xgboost": 0.0
+        },
+        "1": {
+          "catboost": 0.0,
+          "lightgbm": 1.0,
+          "xgboost": 0.0
+        },
+        "2": {
+          "catboost": 0.0,
+          "lightgbm": 1.0,
+          "xgboost": 0.0
+        },
+        "3": {
+          "catboost": 0.0,
+          "lightgbm": 1.0,
+          "xgboost": 0.0
+        },
+        "4": {
+          "catboost": 0.0,
+          "lightgbm": 1.0,
+          "xgboost": 0.0
+        }
+      }
+    }
+  },
+  "weight_step": 0.05
+}

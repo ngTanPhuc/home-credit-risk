@@ -1,0 +1,101 @@
+{
+  "calibrators": [
+    "none",
+    "platt",
+    "isotonic"
+  ],
+  "ece_bins": 15,
+  "experiment": "E6_calibration",
+  "final_choice": {
+    "arm": "stacking",
+    "calibrator": "platt"
+  },
+  "final_choice_matches_recommendation": false,
+  "min_rows": 2000,
+  "recommended": {
+    "catboost": {
+      "brier_mean": 0.06605338360529373,
+      "calibrator": "platt",
+      "ece_mean": 0.003200447572520039,
+      "log_loss_mean": 0.23745239636962476,
+      "roc_auc_mean": 0.7861544950623838
+    },
+    "lightgbm": {
+      "brier_mean": 0.06615394450338317,
+      "calibrator": "platt",
+      "ece_mean": 0.003212029005570127,
+      "log_loss_mean": 0.23800217704788418,
+      "roc_auc_mean": 0.784131528567482
+    },
+    "stacking": {
+      "brier_mean": 0.06594951431368894,
+      "calibrator": "isotonic",
+      "ece_mean": 0.0033148331355622915,
+      "log_loss_mean": 0.23709379577034081,
+      "roc_auc_mean": 0.7876380885434816
+    },
+    "weighted_average": {
+      "brier_mean": 0.06615394450338317,
+      "calibrator": "platt",
+      "ece_mean": 0.003212029005570127,
+      "log_loss_mean": 0.23800217704788418,
+      "roc_auc_mean": 0.784131528567482
+    },
+    "xgboost": {
+      "brier_mean": 0.065967335290622,
+      "calibrator": "platt",
+      "ece_mean": 0.003588490993978321,
+      "log_loss_mean": 0.237079986354074,
+      "roc_auc_mean": 0.7871763134247157
+    }
+  },
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "seeds_detail": {
+    "42": {
+      "arms": [
+        "lightgbm",
+        "xgboost",
+        "catboost",
+        "weighted_average",
+        "stacking"
+      ],
+      "fold_column": "fold",
+      "identifier_column": "SK_ID_CURR",
+      "n_folds": 5,
+      "n_rows": 246008,
+      "target_column": "TARGET"
+    },
+    "43": {
+      "arms": [
+        "lightgbm",
+        "xgboost",
+        "catboost",
+        "weighted_average",
+        "stacking"
+      ],
+      "fold_column": "fold",
+      "identifier_column": "SK_ID_CURR",
+      "n_folds": 5,
+      "n_rows": 246008,
+      "target_column": "TARGET"
+    },
+    "44": {
+      "arms": [
+        "lightgbm",
+        "xgboost",
+        "catboost",
+        "weighted_average",
+        "stacking"
+      ],
+      "fold_column": "fold",
+      "identifier_column": "SK_ID_CURR",
+      "n_folds": 5,
+      "n_rows": 246008,
+      "target_column": "TARGET"
+    }
+  }
+}

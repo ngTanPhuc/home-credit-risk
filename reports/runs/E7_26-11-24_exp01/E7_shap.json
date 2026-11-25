@@ -1,0 +1,106 @@
+{
+  "applicants": {
+    "approved": {
+      "identifier": 445621,
+      "row": 9691,
+      "y_prob": 0.011147426668880883
+    },
+    "rejected": {
+      "identifier": 164614,
+      "row": 1833,
+      "y_prob": 0.9540520605516137
+    }
+  },
+  "artifacts": {
+    "dependence": "/home/phuc/Projects/home-credit-risk_v2.0/reports/figures/E7_shap_dependence.png",
+    "importance": "/home/phuc/Projects/home-credit-risk_v2.0/reports/tables/E7_shap_importance.csv",
+    "reason_table": "/home/phuc/Projects/home-credit-risk_v2.0/reports/tables/E7_reason_codes.csv",
+    "record": "/home/phuc/Projects/home-credit-risk_v2.0/reports/runs/E7_26-11-24_exp01/E7_shap.json",
+    "summary": "/home/phuc/Projects/home-credit-risk_v2.0/reports/figures/E7_shap_summary.png",
+    "waterfall_approved": "/home/phuc/Projects/home-credit-risk_v2.0/reports/figures/E7_shap_waterfall_approved.png",
+    "waterfall_rejected": "/home/phuc/Projects/home-credit-risk_v2.0/reports/figures/E7_shap_waterfall_rejected.png"
+  },
+  "expected_value_log_odds": -0.6757936694866862,
+  "experiment": "E7_explain",
+  "model": "lightgbm",
+  "n_features": 180,
+  "n_holdout": 61503,
+  "n_sample": 10000,
+  "note": "Hold-out features only; no hold-out label was read. Global importance is the mean absolute TreeSHAP contribution over the explained sample.",
+  "reason_codes": [
+    {
+      "applicant_id": 164614,
+      "direction": "increases risk",
+      "feature": "APP_EXT_SOURCE_MEAN",
+      "rank": 1,
+      "reason": "APP_EXT_SOURCE_MEAN = 0.11476512773987395 moved the predicted default log-odds up by 0.9664",
+      "shap": 0.9663841320660095,
+      "value": 0.11476512773987395,
+      "y_prob": 0.9540520605516137
+    },
+    {
+      "applicant_id": 164614,
+      "direction": "increases risk",
+      "feature": "BUREAU_OVERDUE_MAX",
+      "rank": 2,
+      "reason": "BUREAU_OVERDUE_MAX = 413482.5 moved the predicted default log-odds up by 0.6410",
+      "shap": 0.640952516507927,
+      "value": 413482.5,
+      "y_prob": 0.9540520605516137
+    },
+    {
+      "applicant_id": 164614,
+      "direction": "increases risk",
+      "feature": "EXT_SOURCE_3",
+      "rank": 3,
+      "reason": "EXT_SOURCE_3 = 0.0005272652387098817 moved the predicted default log-odds up by 0.3421",
+      "shap": 0.34210832055235,
+      "value": 0.0005272652387098817,
+      "y_prob": 0.9540520605516137
+    },
+    {
+      "applicant_id": 164614,
+      "direction": "increases risk",
+      "feature": "APP_CREDIT_GOODS_RATIO",
+      "rank": 4,
+      "reason": "APP_CREDIT_GOODS_RATIO = 1.528 moved the predicted default log-odds up by 0.1936",
+      "shap": 0.19364067158541792,
+      "value": 1.528,
+      "y_prob": 0.9540520605516137
+    },
+    {
+      "applicant_id": 164614,
+      "direction": "increases risk",
+      "feature": "BUREAU_DEBT_CREDIT_RATIO_MEAN_LOAN",
+      "rank": 5,
+      "reason": "BUREAU_DEBT_CREDIT_RATIO_MEAN_LOAN = 1.16721 moved the predicted default log-odds up by 0.1883",
+      "shap": 0.18832253165185223,
+      "value": 1.16721,
+      "y_prob": 0.9540520605516137
+    }
+  ],
+  "seed": 42,
+  "threshold": 0.5,
+  "top_features": [
+    "APP_EXT_SOURCE_MEAN",
+    "INS_LAST_OBSERVED_PAYMENT_DELAY_MAX",
+    "ORGANIZATION_TYPE",
+    "PREV_CREDIT_APPLICATION_RATIO_MEAN",
+    "APP_CREDIT_ANNUITY_RATIO",
+    "BUREAU_DEBT_CREDIT_RATIO_MEAN_LOAN",
+    "APP_CREDIT_GOODS_RATIO",
+    "CODE_GENDER",
+    "EXT_SOURCE_3",
+    "AMT_ANNUITY",
+    "POS_LATEST_FUTURE_INSTALLMENTS_SUM",
+    "EXT_SOURCE_1",
+    "EXT_SOURCE_2",
+    "INS_OBS_PAYMENT_SUM",
+    "OWN_CAR_AGE",
+    "NAME_FAMILY_STATUS",
+    "NAME_EDUCATION_TYPE",
+    "POS_N_MONTHS",
+    "PREV_REFUSAL_RATE",
+    "OCCUPATION_TYPE"
+  ]
+}

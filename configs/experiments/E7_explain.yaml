@@ -1,0 +1,68 @@
+# E7: explanation (RQ4) — global and local SHAP, and cross-model agreement.
+# src/explain/shap_analysis.py refits the frozen E4/E5 model on all development
+# rows, explains a deterministic sample of hold-out *features* (never labels) and
+# writes the importance table, the summary/dependence figures, one approved and
+# one rejected waterfall, and 3-5 reason codes for the rejected applicant.
+# src/explain/agreement.py compares the E5 gain importances (top-k Jaccard and
+# Spearman rank) — no refit needed.
+
+extends:
+  - ../base.yaml
+  - ../features.yaml
+
+experiment: E7_explain
+variant: tuned
+data_version: datasets_v1
+
+features:
+  use_set: plus_installments
+
+imbalance:
+  strategy: class_weight
+
+seeds:
+  split: 42
+  model: [42]
+
+comparison:
+  models:
+    lightgbm: configs/models/lightgbm.yaml
+    xgboost: configs/models/xgboost.yaml
+    catboost: configs/models/catboost.yaml
+  # Same E4 payload the final model refits from.
+  best_params: reports/runs/E4_26-11-18_exp01/E4_best_params.json
+  ensembles: [stacking]
+  weight_step: 0.05
+
+explain:
+  model: lightgbm
+  seed: 42
+  # Hold-out rows to explain. Full SHAP over 61 503 rows is the long job; 10k is
+  # the agreed sample size. `--sample` overrides it.
+  sample: 10000
+  top_k: 20
+  reason_codes: 5
+  # Decision threshold that defines approved vs rejected for the local case.
+  threshold: 0.5
+  importance_table: reports/tables/E7_shap_importance.csv
+  reason_table: reports/tables/E7_reason_codes.csv
+  summary_figure: reports/figures/E7_shap_summary.png
+  dependence_figure: reports/figures/E7_shap_dependence.png
+  waterfall_dir: reports/figures
+  record: reports/runs/{exp}/E7_shap.json
+
+agreement:
+  # E5 fold-mean gain importance per model, seed 42.
+  importance:
+    lightgbm: reports/tables/E5_26-11-24_exp01/E5_lightgbm_feature_importance_seed42.csv
+    xgboost: reports/tables/E5_26-11-24_exp01/E5_xgboost_feature_importance_seed42.csv
+    catboost: reports/tables/E5_26-11-24_exp01/E5_catboost_feature_importance_seed42.csv
+  top_k: [10, 20, 50, 100]
+  table: reports/tables/E7_feature_agreement.csv
+  record: reports/runs/{exp}/E7_agreement.json
+
+outputs:
+  exp: E7_26-11-24_exp01
+
+mlflow:
+  experiment: E7_explain

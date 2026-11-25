@@ -1,0 +1,26 @@
+# E1: LightGBM baseline on the main application table only, strict defaults.
+# Feature set `main` = the 120 raw application columns (group application_original).
+# The 10 engineered main ratios enter E2 at the next ablation step.
+
+extends:
+  - ../base.yaml
+  - ../features.yaml
+  - ../models/lightgbm.yaml
+
+experiment: E1_baseline
+variant: main_only_default
+data_version: datasets_v1
+
+features:
+  use_set: main
+
+outputs:
+  exp: E1_26-11-16_exp01
+  folds_csv: reports/tables/{exp}/E1_baseline_cv_folds_seed{seed}.csv
+  summary_csv: reports/tables/{exp}/E1_baseline_cv_summary_seed{seed}.csv
+  importance_csv: reports/tables/{exp}/E1_baseline_feature_importance_seed{seed}.csv
+  oof: reports/predictions/{exp}/E1_baseline_lgbm_seed{seed}_oof.parquet
+  run_json: reports/runs/{exp}/E1_baseline_lgbm_seed{seed}.json
+
+mlflow:
+  experiment: E1_baseline

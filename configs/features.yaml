@@ -1,0 +1,239 @@
+# Feature groups and cumulative ablation sets for E1/E2.
+# Generated from reports/tables/feature_catalog.csv (dataset version datasets_v1).
+# Column order follows feature_contract.json; do not hand-edit, regenerate when the dataset changes.
+version: datasets_v1
+
+feature_groups:
+  application_original:  # 120 columns
+    - NAME_CONTRACT_TYPE
+    - CODE_GENDER
+    - FLAG_OWN_CAR
+    - FLAG_OWN_REALTY
+    - CNT_CHILDREN
+    - AMT_INCOME_TOTAL
+    - AMT_CREDIT
+    - AMT_ANNUITY
+    - AMT_GOODS_PRICE
+    - NAME_TYPE_SUITE
+    - NAME_INCOME_TYPE
+    - NAME_EDUCATION_TYPE
+    - NAME_FAMILY_STATUS
+    - NAME_HOUSING_TYPE
+    - REGION_POPULATION_RELATIVE
+    - DAYS_BIRTH
+    - DAYS_EMPLOYED
+    - DAYS_REGISTRATION
+    - DAYS_ID_PUBLISH
+    - OWN_CAR_AGE
+    - FLAG_MOBIL
+    - FLAG_EMP_PHONE
+    - FLAG_WORK_PHONE
+    - FLAG_CONT_MOBILE
+    - FLAG_PHONE
+    - FLAG_EMAIL
+    - OCCUPATION_TYPE
+    - CNT_FAM_MEMBERS
+    - REGION_RATING_CLIENT
+    - REGION_RATING_CLIENT_W_CITY
+    - WEEKDAY_APPR_PROCESS_START
+    - HOUR_APPR_PROCESS_START
+    - REG_REGION_NOT_LIVE_REGION
+    - REG_REGION_NOT_WORK_REGION
+    - LIVE_REGION_NOT_WORK_REGION
+    - REG_CITY_NOT_LIVE_CITY
+    - REG_CITY_NOT_WORK_CITY
+    - LIVE_CITY_NOT_WORK_CITY
+    - ORGANIZATION_TYPE
+    - EXT_SOURCE_1
+    - EXT_SOURCE_2
+    - EXT_SOURCE_3
+    - APARTMENTS_AVG
+    - BASEMENTAREA_AVG
+    - YEARS_BEGINEXPLUATATION_AVG
+    - YEARS_BUILD_AVG
+    - COMMONAREA_AVG
+    - ELEVATORS_AVG
+    - ENTRANCES_AVG
+    - FLOORSMAX_AVG
+    - FLOORSMIN_AVG
+    - LANDAREA_AVG
+    - LIVINGAPARTMENTS_AVG
+    - LIVINGAREA_AVG
+    - NONLIVINGAPARTMENTS_AVG
+    - NONLIVINGAREA_AVG
+    - APARTMENTS_MODE
+    - BASEMENTAREA_MODE
+    - YEARS_BEGINEXPLUATATION_MODE
+    - YEARS_BUILD_MODE
+    - COMMONAREA_MODE
+    - ELEVATORS_MODE
+    - ENTRANCES_MODE
+    - FLOORSMAX_MODE
+    - FLOORSMIN_MODE
+    - LANDAREA_MODE
+    - LIVINGAPARTMENTS_MODE
+    - LIVINGAREA_MODE
+    - NONLIVINGAPARTMENTS_MODE
+    - NONLIVINGAREA_MODE
+    - APARTMENTS_MEDI
+    - BASEMENTAREA_MEDI
+    - YEARS_BEGINEXPLUATATION_MEDI
+    - YEARS_BUILD_MEDI
+    - COMMONAREA_MEDI
+    - ELEVATORS_MEDI
+    - ENTRANCES_MEDI
+    - FLOORSMAX_MEDI
+    - FLOORSMIN_MEDI
+    - LANDAREA_MEDI
+    - LIVINGAPARTMENTS_MEDI
+    - LIVINGAREA_MEDI
+    - NONLIVINGAPARTMENTS_MEDI
+    - NONLIVINGAREA_MEDI
+    - FONDKAPREMONT_MODE
+    - HOUSETYPE_MODE
+    - TOTALAREA_MODE
+    - WALLSMATERIAL_MODE
+    - EMERGENCYSTATE_MODE
+    - OBS_30_CNT_SOCIAL_CIRCLE
+    - DEF_30_CNT_SOCIAL_CIRCLE
+    - OBS_60_CNT_SOCIAL_CIRCLE
+    - DEF_60_CNT_SOCIAL_CIRCLE
+    - DAYS_LAST_PHONE_CHANGE
+    - FLAG_DOCUMENT_2
+    - FLAG_DOCUMENT_3
+    - FLAG_DOCUMENT_4
+    - FLAG_DOCUMENT_5
+    - FLAG_DOCUMENT_6
+    - FLAG_DOCUMENT_7
+    - FLAG_DOCUMENT_8
+    - FLAG_DOCUMENT_9
+    - FLAG_DOCUMENT_10
+    - FLAG_DOCUMENT_11
+    - FLAG_DOCUMENT_12
+    - FLAG_DOCUMENT_13
+    - FLAG_DOCUMENT_14
+    - FLAG_DOCUMENT_15
+    - FLAG_DOCUMENT_16
+    - FLAG_DOCUMENT_17
+    - FLAG_DOCUMENT_18
+    - FLAG_DOCUMENT_19
+    - FLAG_DOCUMENT_20
+    - FLAG_DOCUMENT_21
+    - AMT_REQ_CREDIT_BUREAU_HOUR
+    - AMT_REQ_CREDIT_BUREAU_DAY
+    - AMT_REQ_CREDIT_BUREAU_WEEK
+    - AMT_REQ_CREDIT_BUREAU_MON
+    - AMT_REQ_CREDIT_BUREAU_QRT
+    - AMT_REQ_CREDIT_BUREAU_YEAR
+
+  application:  # 10 columns
+    - APP_CREDIT_INCOME_RATIO
+    - APP_ANNUITY_INCOME_RATIO
+    - APP_CREDIT_ANNUITY_RATIO
+    - APP_CREDIT_GOODS_RATIO
+    - APP_INCOME_PER_FAMILY_MEMBER
+    - APP_AGE_YEARS
+    - APP_EMPLOYMENT_YEARS
+    - APP_EMPLOYMENT_AGE_RATIO
+    - APP_EXT_SOURCE_MEAN
+    - APP_EXT_SOURCE_STD
+
+  bureau:  # 17 columns
+    - BUREAU_N_LOANS
+    - BUREAU_ACTIVE_RATE
+    - BUREAU_CREDIT_SUM
+    - BUREAU_DEBT_SUM
+    - BUREAU_DEBT_MAX
+    - BUREAU_OVERDUE_MAX
+    - BUREAU_DPD_MAX
+    - BUREAU_DAYS_CREDIT_MAX
+    - BUREAU_N_RECENT_365
+    - BUREAU_BB_N_LOANS
+    - BUREAU_BB_MONTHS_SUM
+    - BUREAU_BB_KNOWN_MONTHS_SUM
+    - BUREAU_BB_LATE_MONTHS_SUM
+    - BUREAU_BB_LATE_RATE_MEAN_LOAN
+    - BUREAU_DEBT_CREDIT_RATIO_MEAN_LOAN
+    - BUREAU_BB_LATE_RATE_WEIGHTED
+    - HAS_BUREAU
+
+  previous:  # 10 columns
+    - PREV_N_APPLICATIONS
+    - PREV_APPROVAL_RATE
+    - PREV_REFUSAL_RATE
+    - PREV_CREDIT_MEAN
+    - PREV_CREDIT_MAX
+    - PREV_APPROVED_CREDIT_SUM
+    - PREV_CREDIT_APPLICATION_RATIO_MEAN
+    - PREV_DAYS_DECISION_MAX
+    - PREV_N_RECENT_365
+    - HAS_PREVIOUS
+
+  pos:  # 6 columns
+    - POS_N_LOANS
+    - POS_N_MONTHS
+    - POS_DPD_MEAN_LOAN
+    - POS_DPD_MAX
+    - POS_LATEST_FUTURE_INSTALLMENTS_SUM
+    - HAS_POS
+
+  credit_card:  # 8 columns
+    - CC_N_LOANS
+    - CC_N_MONTHS
+    - CC_UTILIZATION_MEAN_LOAN
+    - CC_UTILIZATION_MAX
+    - CC_DPD_MAX
+    - CC_LATEST_BALANCE_SUM
+    - CC_LATEST_LIMIT_SUM
+    - HAS_CREDIT_CARD
+
+  installments:  # 9 columns
+    - INS_N_LOANS
+    - INS_N_DUE_PERIODS
+    - INS_N_KNOWN_PAYMENT_PERIODS
+    - INS_N_MULTI_RECORD_PERIODS
+    - INS_PAYMENT_RATIO_MEAN_LOAN
+    - INS_LAST_OBSERVED_PAYMENT_DELAY_MAX
+    - INS_OBS_PAYMENT_SUM
+    - INS_UNDERPAY_RATE_MEAN_LOAN
+    - HAS_INSTALLMENTS
+
+feature_sets:
+  main:  # 120 columns
+    - application_original
+  main_plus_ratios:  # 130 columns
+    - application_original
+    - application
+  plus_bureau:  # 147 columns
+    - application_original
+    - application
+    - bureau
+  plus_previous:  # 157 columns
+    - application_original
+    - application
+    - bureau
+    - previous
+  plus_pos:  # 163 columns
+    - application_original
+    - application
+    - bureau
+    - previous
+    - pos
+  plus_credit_card:  # 171 columns
+    - application_original
+    - application
+    - bureau
+    - previous
+    - pos
+    - credit_card
+  plus_installments:  # 180 columns
+    - application_original
+    - application
+    - bureau
+    - previous
+    - pos
+    - credit_card
+    - installments
+
+features:
+  use_set: main

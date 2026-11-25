@@ -23,7 +23,7 @@ env/
 ENV/
 
 # ---------------------------------------------------------------------------
-# Data — never commit raw, interim or processed data.
+# Data — never commit raw, interim, splits or processed data.
 # Paths are anchored to the repo root so src/data/ is NOT ignored.
 # ---------------------------------------------------------------------------
 /data/raw/*
@@ -32,6 +32,11 @@ ENV/
 !/data/interim/.gitkeep
 /data/processed/*
 !/data/processed/.gitkeep
+/data/splits/*
+!/data/splits/.gitkeep
+/reports/tables/*.csv
+!/reports/tables/B*
+!/reports/tables/E*
 
 # Generated tabular/model artifacts
 *.parquet
@@ -39,8 +44,6 @@ ENV/
 *.arrow
 *.h5
 *.hdf5
-# The one tracked data artifact: the shared fold assignment file.
-!/splits/folds.parquet
 
 # Model and tuning artifacts
 *.pkl
@@ -61,7 +64,7 @@ ENV/
 # ---------------------------------------------------------------------------
 /mlruns/
 /mlartifacts/
-/reports/runs/
+/reports/submissions/
 /logs/
 *.log
 
@@ -112,3 +115,8 @@ Thumbs.db
 desktop.ini
 tmp/
 .tmp/
+
+# ---------------------------------------------------------------------------
+# Graphify output
+# ---------------------------------------------------------------------------
+graphify-out/*
