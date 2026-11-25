@@ -64,6 +64,7 @@ ENV/
 # ---------------------------------------------------------------------------
 /mlruns/
 /mlartifacts/
+/reports/submissions/
 /logs/
 *.log
 

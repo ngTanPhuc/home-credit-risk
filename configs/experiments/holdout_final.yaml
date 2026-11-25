@@ -23,3 +23,9 @@ holdout:
   delong_table: reports/tables/B4_delong_pairs.csv
   figure: reports/figures/holdout_reliability.png
   record: reports/runs/{exp}/holdout_final.json
+
+submission:
+  # Kaggle upload: two columns, SK_ID_CURR and TARGET.
+  out: reports/submissions/submission_{exp}.csv
+  model: reports/runs/{exp}/final_model.joblib
+  record: reports/runs/{exp}/submission.json

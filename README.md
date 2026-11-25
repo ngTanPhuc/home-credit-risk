@@ -4,7 +4,7 @@ Building a credit risk scoring pipeline on the Kaggle **Home Credit Default Risk
 
 The task is binary classification on seven relational tables. For each applicant in `application_train`, predict `P(TARGET = 1 | x)`, then calibrate the probability and explain the drivers. Positives are roughly 8% of the data.
 
-> **Project status: Phases 0-7 done (E1 baseline, E2 ablation, E3 imbalance, E4 tuning, E5 model comparison and ensemble logged); Phase 8 (E6 calibration) is next.** Person A's dataset is frozen (`data/processed/datasets/`, contract `datasets_v1`, 180 predictors), the split protocol is single and fixed, `src/cv` + `src/models` + `src/evaluation` + `src/tuning` are implemented, and `tests/` passes. The notebooks 01..04 build the data; `src/` only models it. `AGENTS.md` defines the workflow, phases and ownership; `INIT.md` holds the research questions, dataset specification and methodology.
+> **Project status: Phases 0-7 done and run (E1 baseline, E2 ablation, E3 imbalance, E4 tuning, E5 model comparison and ensemble logged). Phase 8 (E6 calibration) is done and froze `stacking` + `isotonic`, and Phase 9 (the single final hold-out read) is done: AUC 0.788079, Brier 0.065718, ECE 0.003827 on 61 503 held-out applicants. Phase 10 (E7 SHAP explanation) is done as well: one 10k-row hold-out sample explained, `APP_EXT_SOURCE_MEAN` carrying 11.6% of the signal and 14 features covering half of it.** The Kaggle submission has been generated from the frozen bundle (`reports/submissions/submission_holdout_26-11-24.csv`, 48 744 rows). Person A's dataset is frozen (`data/processed/datasets/`, contract `datasets_v1`, 180 predictors), the split protocol is single and fixed, `src/cv` + `src/models` + `src/evaluation` + `src/tuning` + `src/explain` are implemented, and `tests/` passes. The notebooks 01..04 build the data; `src/` only models it. `AGENTS.md` defines the workflow, phases and ownership; `INIT.md` holds the research questions, dataset specification and methodology.
 
 ## Scope
 
@@ -151,15 +151,22 @@ uv run python3 -m src.tuning.optuna_search --config configs/experiments/E4_tunin
 # E5 comparison: 3 tuned GBDTs x 3 seeds, cross-fitted ensembles, B2 + DeLong pairs
 uv run python3 -m src.evaluation.model_comparison --config configs/experiments/E5_models.yaml
 
-# Final hold-out evaluation — run ONCE, deliberately
-uv run python3 -m src.evaluation.holdout --config configs/experiments/E5_models.yaml --confirm-final
+# E6 calibration: none vs Platt vs isotonic on the E5 OOF, cross-fitted (no refit)
+uv run python3 -m src.evaluation.calibration_eval --config configs/experiments/E6_calibration.yaml
 
-# Explanation
+# Final hold-out evaluation — run ONCE, deliberately, after freezing `final` in E6_calibration.yaml
+uv run python3 -m src.evaluation.holdout --config configs/experiments/holdout_final.yaml --confirm-final
+
+# Explanation: global/local SHAP on hold-out features (10k sample by default), then feature agreement
 uv run python3 -m src.explain.shap_analysis --config configs/experiments/E7_explain.yaml
 uv run python3 -m src.explain.agreement --config configs/experiments/E7_explain.yaml
+
+# Kaggle submission: refit the frozen pair, score test.parquet, write submission_<exp>.csv
+uv run python3 -m src.evaluation.submit --config configs/experiments/holdout_final.yaml --save-model
+# Reuse the saved bundle instead of refitting (~5 min): --reuse-model <bundle.joblib>
 ```
 
-Working commands: `src.cv.runner` (E1), `src.evaluation.ablation` (E2), `src.evaluation.imbalance_comparison` (E3), `src.tuning.optuna_search` (E4) and `src.evaluation.model_comparison` (E5). The hold-out, calibration and explanation commands land with their phases.
+Working commands: `src.cv.runner` (E1), `src.evaluation.ablation` (E2), `src.evaluation.imbalance_comparison` (E3), `src.tuning.optuna_search` (E4), `src.evaluation.model_comparison` (E5), `src.evaluation.calibration_eval` (E6), `src.evaluation.holdout` (final hold-out), `src.explain.{shap_analysis,agreement}` (E7) and `src.evaluation.submit` (Kaggle submission from the frozen bundle).
 
 ## Repository layout
 
@@ -171,7 +178,7 @@ data/processed/       Cleaned tables, features/, datasets/ (gitignored)
 data/splits/          Split Parquet (gitignored) + train_val_metadata.json (tracked)
 notebooks/01..04      Person A data pipeline (standalone, Vietnamese prose)
 src/cv/               Dataset/contract loading, split validation, fold runner
-src/models/           Common model interface, LGBM/XGB/CatBoost, ensemble
+src/models/           Common model interface, LGBM/XGB/CatBoost, ensemble, final bundle
 src/tuning/           Optuna TPE search
 src/imbalance.py      Per-fold imbalance variants: none, class weight, undersample, SMOTENC
 src/calibration.py    Platt / isotonic on OOF predictions
@@ -190,7 +197,7 @@ reports/figures/      ROC/PR, tuning history, reliability, SHAP plots
 - One fixed split, created once by `notebooks/01_data_overview_eda.ipynb`: 80% development, 20% stratified hold-out (hold-out seed `2026`).
 - The development set uses 5-fold stratified CV (seed `42`); fold ids live in the `fold` column of `data/processed/datasets/train.parquet`, validated against `data/splits/train_val_metadata.json`.
 - **Never re-split or regenerate the split** once it exists. Every model and experiment uses the same folds.
-- The hold-out is read exactly once, by `src/evaluation/holdout.py --confirm-final`. No tuning or model selection may touch it; `src/cv/dataset.py` raises `PermissionError` on any other attempt to load `val.parquet`.
+- The hold-out *labels* are read exactly once, by `src/evaluation/holdout.py --confirm-final`. No tuning or model selection may touch it; `src/cv/dataset.py` raises `PermissionError` on any other attempt to load `val.parquet` through `load_split_frame`. Explanation may read hold-out *features* without labels through `load_holdout_features`, which never returns the target column.
 - The split is random by design: the data has no application date, so a temporal split is impossible. This is a documented limitation.
 - Final experiments repeat with 3 model seeds (the split stays fixed) and report mean ± std.
 
@@ -212,6 +219,8 @@ E3 is done: AUC 0.77836 (`none`), 0.77920 (`class_weight`), 0.77753 (`undersampl
 
 E4 is done: 40 Optuna TPE trials per model on `plus_installments` with `class_weight` moved default → tuned AUC from 0.77920 → 0.78424 (LightGBM), 0.77528 → 0.78717 (XGBoost) and 0.78259 → 0.78607 (CatBoost); tuned fold std is ~0.0013 and no trial failed. The LightGBM default run reproduces the E3 `class_weight` AUC exactly, so the harness replays the E1-E3 protocol. Two caveats: the best-so-far curve is flat from trial ~4, so 40 trials was more than needed, and the winners learn slowly enough that the 2000-round budget binds — but E5's capacity probe shows 2000 is the peak, so raising the cap overfits (see below). Tuned parameters with a fixed iteration count (`fixed_iterations` / `final_params`) are saved for E5 in `reports/runs/E4_26-11-18_exp01/E4_best_params.json`. See `DECISIONS.md`.
 
+E6 is done (run `E6_26-11-24_exp01`, 246 008 OOF rows, 3 seeds): calibration removes the `class_weight` damage on every arm, taking the base models from Brier 0.166-0.175 / ECE 0.28-0.30 to 0.0660-0.0662 / 0.0032-0.0036 without touching their AUC. Platt and isotonic are interchangeable on the base models and Platt is a no-op on the stack, whose logistic meta-learner already relearned the scale. The stack is the best arm on the probability metrics with `isotonic` (Brier 0.065950, log loss 0.237094, ECE 0.003315, against 0.066070 / 0.237352 / 0.005605 uncalibrated and 0.065967 / 0.237080 / 0.003588 for xgboost + Platt); the cost is that the isotonic map has ~100 levels, so AUC/KS on the stored probability read ~0.0002 / ~0.0012 lower than the raw stack while tie-breaking by the raw score restores the raw AUC exactly. E6 reuses the E5 OOF predictions (no refit, hold-out untouched), so every Brier/ECE number is cross-fitted and the uncalibrated row stays as the reference. The hold-out is done (`holdout_26-11-24`, once, as the protocol requires): the frozen pair scores AUC 0.788079, Gini 0.576157, KS 0.433446, PR-AUC 0.280041, Brier 0.065718 (baseline 0.074211), ECE 0.003827 and log loss 0.236659, and the CV-to-hold-out gap is +0.0004 AUC / -0.0002 Brier, so nothing was selected into the CV folds. The honest ensemble claim is narrower than E5 suggested: on the hold-out `stacking` beats LightGBM (DeLong p 1e-12) and CatBoost (p 0.004) but is tied with XGBoost (+0.000124, p 0.731), so the CV advantage of +0.00065 did not replicate. At a 0.2 threshold the frozen model reaches precision 0.299 / recall 0.393; at 0.5 precision 0.575 / recall 0.056, which is unusable at an 8% base rate. E7 (SHAP) is done (run `E7_26-11-24_exp01`, LightGBM seed 42 fitted on all development rows, 10 000 hold-out features, no label read): `APP_EXT_SOURCE_MEAN` carries 11.6% of the mean |SHAP|, the top-20 carry 61.6% and 14 features reach 50%, while 20 of the 180 columns contribute exactly nothing. The 10 engineered ratios hold 22.9% of the signal against 43.1% for the 120 raw application columns, `EXT_SOURCE` and payment delay are monotone in the expected direction, and additivity holds with `E[f(x)] = -0.676` (the class_weight prior of 33.7%, not the 8.07% base rate, so SHAP magnitudes are weighted log-odds). Cross-model agreement is two-level: Spearman 0.798-0.945 and top-20 Jaccard 0.38-0.60, but top-10 Jaccard only 0.176-0.538, so quote the top-20 set and not "the most important feature". E7 explains the LightGBM member, not the stack (a stack over three probabilities has no feature attribution). See `reports/E7_report.md`. See `reports/E6_report.md`. The `final` block in `configs/experiments/E6_calibration.yaml` freezes the model + calibrator pair the hold-out evaluates: `stacking` + `isotonic`, decided on the E6 run (`E6_26-11-24_exp01`, see below). `src/evaluation/holdout.py` refuses to run without `--confirm-final` and refuses to overwrite an earlier B3/B4. E7 fits the frozen model on all development rows, explains a deterministic 10k hold-out sample through `load_holdout_features` (predictors and identifiers only, never labels), and writes reason codes for the rejected applicant; `src/explain/agreement.py` compares the E5 gain importances (Spearman and top-k Jaccard), already produced at `reports/tables/E7_feature_agreement.csv`.
+
 E5 is done: three tuned GBDTs × 3 seeds on `plus_installments` score LightGBM 0.78413 ± 0.00014, XGBoost 0.78718 ± 0.00001 and CatBoost 0.78615 ± 0.00006 (per-seed mean over 5 folds, then mean ± std over seeds). Stacking reaches 0.78783 ± 0.00008, beating XGBoost by +0.00065 with a DeLong p of 1.4e-05 to 0.0020 on all three seeds, and it repairs most of the `class_weight` scale damage without E6 (Brier 0.06607, ECE 0.00561). The weighted average degenerated onto LightGBM (weight 1.0 in every fold, identical row in B2): it minimizes log loss, and with three near-identically ranked models that differ only in how badly `class_weight` inflates their probabilities, the optimum is the best-scaled member rather than a blend. Its row is therefore reported as evidence of that, not as an independent ensemble result. The gain is small because the three models are near-duplicates on one 180-column table (pairwise Spearman 0.968-0.979, top-5% Jaccard 0.698-0.752); more AUC has to come from features, not the ensemble. Run cost 50.7 min and 3.80 GB peak; the hold-out stayed locked. See `DECISIONS.md`.
 
 ## Kaggle workflow
@@ -230,6 +239,10 @@ Kaggle sessions are time- and memory-limited (16 GB RAM ceiling):
 - `reports/tables/E3_imbalance_comparison.csv` and per-variant fold/summary/importance CSVs under `reports/tables/E3_<run>/`
 - E4: `reports/tables/E4_tuning_comparison.csv`, `reports/tables/E4_tuning_history.csv`, best parameters (with the fixed iteration count for E5) in `reports/runs/E4_<run>/E4_best_params.json`, and the AUC-vs-trial figure `reports/figures/E4_optuna_history.png`
 - E5: `reports/tables/B2_model_comparison.csv` (mean ± std over seeds), `reports/tables/E5_delong_pairs.csv`, `reports/runs/E5_<run>/E5_ensembles.json` (blend weights per seed) and `reports/figures/E5_roc_pr.png`
+- E6: `reports/tables/E6_calibration.csv` (Brier/ECE/log loss per arm × calibrator, before vs after), `E6_calibration_folds.csv`, `reports/figures/E6_reliability.png` and `reports/runs/E6_<run>/E6_calibration.json` (recommended calibrator per arm)
+- Final hold-out: `reports/tables/B3_calibration.csv`, `reports/tables/B4_delong_pairs.csv`, `reports/figures/holdout_reliability.png` and `reports/runs/holdout_<date>/holdout_final.json`
+- Submission: `reports/submissions/submission_<exp>.csv` (`SK_ID_CURR`, `TARGET`) and the joblib bundle from `--save-model`, loadable with `FinalModel.load(path)`
+- E7: `reports/tables/E7_shap_importance.csv`, `E7_reason_codes.csv`, `E7_feature_agreement.csv`, `reports/figures/E7_shap_{summary,dependence}.png`, `E7_shap_waterfall_{approved,rejected}.png` and `reports/runs/E7_<run>/E7_shap.json`
 - Per-experiment reports: `reports/E1_report.md`, `reports/E2_report.md`, `reports/E3_report.md`
 - `reports/figures/`: ROC/PR curves, Optuna history, reliability diagrams, SHAP summary/dependence/waterfall, importance-agreement heatmap
 - `mlruns/`: local MLflow tracking (gitignored)
